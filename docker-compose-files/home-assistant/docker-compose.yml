@@ -5,13 +5,26 @@ services:
     image: homeassistant/home-assistant:stable
     container_name: ${DOCKER_CONTAINER_NAME_PREFIX}home-assistant
     hostname: home-assistant
+    mac_address: ${DOCKER_CONTAINER_MAC}
     healthcheck:
       test: "curl -Lk -fsS http://localhost:8123 || exit 1"
     volumes:
       - /etc/localtime:/etc/localtime:ro
-      - ${DOCKER_PATH_PERSISTENT}/home-assistant_config:/config:rw
-      - ${DOCKER_PATH_TEMPORARY}/home-assistant_tmp:/tmp:rw
+      - ${DOCKER_PATH_PERSISTENT}/homeassistant/config:/config:rw
+      - ${DOCKER_PATH_TEMPORARY}/homeassistant/tmp:/tmp:rw
     restart: always
-    network_mode: host
+    networks:
+      macvlan0:
+        ipv4_address: ${DOCKER_IPV4}
     environment:
       - TZ=${DOCKER_TZ}
+
+networks:
+  macvlan0:
+    driver: macvlan
+    driver_opts:
+      parent: ${LAN_INTERFACE} #**Your network interface for example enp6s1 
+    ipam:
+      config:
+        - subnet: ${LAN_SUBNET}     #**Your network subnet for example 192.168.0.0/16
+          gateway: ${LAN_GATEWAY}   #**Your network gateway for example 192.168.1.1
