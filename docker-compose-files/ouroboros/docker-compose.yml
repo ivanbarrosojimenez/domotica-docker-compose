@@ -1,0 +1,26 @@
+version: "2.1"
+
+services:
+  ouroboros:
+    image: pyouroboros/ouroboros:latest
+    container_name: ${DOCKER_CONTAINER_NAME_PREFIX}ouroboros
+    hostname: ouroboros
+    # Must be "no" if RUN_ONCE=true
+    restart: always
+    network_mode: bridge
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:rw
+      - $HOME/.docker/config.json:/root/.docker/config.json:ro
+    environment:
+      - TZ=${DOCKER_TZ}
+      - CLEANUP=${DOCKER_OUROBOROS_CLEANUP:-false}
+      - MONITOR=${DOCKER_OUROBOROS_MONITOR}
+      - IGNORE=${DOCKER_OUROBOROS_IGNORE}
+      # Notifications using apprise: https://github.com/pyouroboros/ouroboros/wiki/Notifications
+      - NOTIFIERS=${DOCKER_OUROBOROS_NOTIFIERS}
+      - LOG_LEVEL=${DOCKER_OUROBOROS_LOGLEVEL:-info}
+      - RUN_ONCE=${DOCKER_OUROBOROS_RUNONCE:-false}
+      - INTERVAL=${DOCKER_OUROBOROS_INTERVAL}
+      - CRON=${DOCKER_OUROBOROS_CRON}
+      - SKIP_STARTUP_NOTIFICATIONS=${DOCKER_OUROBOROS_SKIPSTARTUPNOTIFICATIONS:-false}
+      # More options and info in https://github.com/pyouroboros/ouroboros/wiki/Usage
