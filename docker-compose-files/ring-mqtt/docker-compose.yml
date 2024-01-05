@@ -1,0 +1,24 @@
+version: "3"
+
+  ring-mqtt:
+      container_name: ${DOCKER_CONTAINER_NAME_PREFIX}ring-mqtt
+      image: tsightler/ring-mqtt
+      mac_address: ${DOCKER_CONTAINER_MAC}
+      networks:
+        domotica_macvlan0:
+          ipv4_address: ${DOCKER_IPV4}
+      ports:
+        - 8554:8554   # Enable RTSP port for external media player access
+      privileged: true
+      volumes:
+        - ${DOCKER_PATH_PERSISTENT}/ring-mqtt/data:/data:rw  # Mapping of local folder to provide persistent storage
+      environment:
+        - TZ=${DOCKER_TZ} 
+      logging:   #limit logs to 10m and 3 files
+        options:
+          max-size: 10m
+          max-file: "3"   
+
+networks:
+  domotica_macvlan0:
+    external: true
