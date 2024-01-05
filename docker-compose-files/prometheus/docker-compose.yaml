@@ -1,0 +1,17 @@
+version: '3'
+services:
+  prometheus:
+    image: prom/prometheus
+    container_name: ${DOCKER_CONTAINER_NAME_PREFIX}prometheus
+    ports:
+      - 9090:9090
+    volumes:
+      - ${DOCKER_PATH_PERSISTENT}/prometheus.yml:/etc/prometheus/prometheus.yml:ro #set file config
+    restart: always
+    networks:
+      - prometheus
+      
+networks:
+  prometheus:
+    driver: bridge
+    name: prometheus
