@@ -15,6 +15,6 @@ services:
       - ${DOCKER_PATH_PERSISTENT}/filebrowser_config:/config:rw
       - ${DOCKER_PATH_PERSISTENT}/filebrowser_database:/database:rw
     environment:
-      - PUID=${DOCKER_ROOTPUID:-0}
-      - PGID=${DOCKER_ROOTPGID:-0}
+      #- PUID=${DOCKER_ROOTPUID:-0}
+      #- PGID=${DOCKER_ROOTPGID:-0}
       - TZ=${DOCKER_TZ}
