@@ -26,3 +26,6 @@ services:
       volumes:
         - ${DOCKER_PATH_PERSISTENT}/pihole/etc/pihole:/etc/pihole
         - ${DOCKER_PATH_PERSISTENT}/pihole/etc/dnsmasq.d:/etc/dnsmasq.d"
+networks:
+  domotica_macvlan0:
+    external: true
