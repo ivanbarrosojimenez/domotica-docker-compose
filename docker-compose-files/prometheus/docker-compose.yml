@@ -6,7 +6,7 @@ services:
     ports:
       - 9090:9090
     volumes:
-      - ${DOCKER_PATH_PERSISTENT}/prometheus.yml:/etc/prometheus/prometheus.yml:ro #set file config
+      - ${DOCKER_PATH_PERSISTENT}/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro #set file config
     restart: always
     networks:
       - prometheus
