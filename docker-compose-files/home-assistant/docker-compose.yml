@@ -18,13 +18,16 @@ services:
         ipv4_address: ${DOCKER_IPV4}
     environment:
       - TZ=${DOCKER_TZ}
-
 networks:
   macvlan0:
-    driver: macvlan
-    driver_opts:
-      parent: ${LAN_INTERFACE} #**Your network interface for example enp6s1 
-    ipam:
-      config:
-        - subnet: ${LAN_SUBNET}     #**Your network subnet for example 192.168.0.0/16
-          gateway: ${LAN_GATEWAY}   #**Your network gateway for example 192.168.1.1
+    external: true
+
+#networks:
+#  macvlan0:
+#    driver: macvlan
+#    driver_opts:
+#      parent: ${LAN_INTERFACE} #**Your network interface for example enp6s1 
+#    ipam:
+#      config:
+#        - subnet: ${LAN_SUBNET}     #**Your network subnet for example 192.168.0.0/16
+#          gateway: ${LAN_GATEWAY}   #**Your network gateway for example 192.168.1.1
