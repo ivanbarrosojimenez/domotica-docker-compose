@@ -1,5 +1,5 @@
 version: "3"
-
+services:
   ring-mqtt:
       container_name: ${DOCKER_CONTAINER_NAME_PREFIX}ring-mqtt
       image: tsightler/ring-mqtt
