@@ -14,7 +14,7 @@ services:
       - ${DOCKER_PATH_TEMPORARY}/homeassistant/tmp:/tmp:rw
     restart: always
     networks:
-      macvlan0:
+      domotica_macvlan0:
         ipv4_address: ${DOCKER_IPV4}
     environment:
       - TZ=${DOCKER_TZ}
