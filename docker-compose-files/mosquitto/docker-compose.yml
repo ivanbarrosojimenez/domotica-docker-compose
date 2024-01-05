@@ -1,0 +1,24 @@
+version: "3"
+
+services:
+  mosquitto:
+    image: eclipse-mosquitto:latest
+    container_name: ${DOCKER_CONTAINER_NAME_PREFIX}mosquitto
+    mac_address: ${DOCKER_CONTAINER_MAC}
+    networks:
+        domotica_macvlan0:
+          ipv4_address: ${DOCKER_IPV4}
+    environment:
+      - TZ=Europe/Madrid    
+    volumes:
+      - ${DOCKER_PATH_PERSISTENT}/mosquitto/config:/mosquitto/config
+      - ${DOCKER_PATH_PERSISTENT}/mosquitto/data:/mosquitto/data:rw
+      - ${DOCKER_PATH_TEMPORARY}/mosquitto/log:/mosquitto/log:rw
+    ports:
+      - 1883:1883
+      - 9001:9001
+    restart: always
+
+networks:
+  domotica_macvlan0:
+    external: true
