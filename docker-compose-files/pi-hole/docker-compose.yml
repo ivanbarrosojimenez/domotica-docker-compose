@@ -1,0 +1,28 @@
+version:'3'
+services:
+  pihole:
+      container_name: ${DOCKER_CONTAINER_NAME_PREFIX}pihole
+      image: pihole/pihole:latest
+      hostname: pihole
+      mac_address: ${DOCKER_CONTAINER_MAC}
+      networks:
+        domotica_macvlan0:
+          ipv4_address: ${DOCKER_IPV4}
+      dns:
+        - 127.0.0.1 # use local DNS, since the pihole 
+        - 1.1.1.1 # optional fallback DNS
+      environment:
+        TZ: ${DOCKER_TZ} 
+        WEBPASSWORD: ${PI_HOLE_PASSWD}
+        FTLCONF_LOCAL_IPV4: ${DOCKER_IPV4}
+        mac_address: ${DOCKER_CONTAINER_MAC}
+      ports:
+        - "443:443/tcp"
+        - "53:53/tcp"
+        #- "67:67/udp" # Only required if you are using Pi-hole as your DHCP server
+        - "53:53/udp"
+        - "80:80/tcp"
+      restart: always
+      volumes:
+        - ${DOCKER_PATH_PERSISTENT}/pihole/etc/pihole:/etc/pihole
+        - ${DOCKER_PATH_PERSISTENT}/pihole/etc/dnsmasq.d:/etc/dnsmasq.d"
