@@ -19,7 +19,7 @@ services:
     environment:
       - TZ=${DOCKER_TZ}
 networks:
-  macvlan0:
+  domotica_macvlan0:
     external: true
 
 #networks:
