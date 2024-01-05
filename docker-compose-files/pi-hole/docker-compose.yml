@@ -1,4 +1,4 @@
-version:'3'
+version: '3'
 services:
   pihole:
       container_name: ${DOCKER_CONTAINER_NAME_PREFIX}pihole
