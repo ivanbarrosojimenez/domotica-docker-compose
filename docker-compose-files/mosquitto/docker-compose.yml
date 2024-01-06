@@ -11,7 +11,7 @@ services:
     environment:
       - TZ=Europe/Madrid    
     volumes:
-      - ${DOCKER_PATH_PERSISTENT}/mosquitto/config:/mosquitto/config
+      - ${DOCKER_PATH_PERSISTENT}/mosquitto/config:/mosquitto/config:rw
       - ${DOCKER_PATH_PERSISTENT}/mosquitto/data:/mosquitto/data:rw
       - ${DOCKER_PATH_TEMPORARY}/mosquitto/log:/mosquitto/log:rw
     ports:
