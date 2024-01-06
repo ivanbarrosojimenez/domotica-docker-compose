@@ -5,6 +5,7 @@ services:
     image: homeassistant/home-assistant:stable
     container_name: ${DOCKER_CONTAINER_NAME_PREFIX}home-assistant
     hostname: home-assistant
+    privileged: true
     mac_address: ${DOCKER_CONTAINER_MAC}
     healthcheck:
       test: "curl -Lk -fsS http://localhost:8123 || exit 1"
