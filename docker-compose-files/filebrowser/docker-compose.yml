@@ -4,7 +4,7 @@ services:
   filebrowser:
     pull_policy: always
     user: root
-    image: 	filebrowser/filebrowser:v2-s6
+    image: 	filebrowser/filebrowser:stable
     container_name: ${DOCKER_CONTAINER_NAME_PREFIX}filebrowser
     hostname: filebrowser
     restart: always
