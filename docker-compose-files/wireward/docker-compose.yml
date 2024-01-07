@@ -13,13 +13,16 @@ services:
       - SERVERPORT=51820
       - PEERS=10
       - PEERDNS=auto
-      - INTERNAL_SUBNET=192.168.1.0
+      - INTERNAL_SUBNET=192.168.0.0
       - ALLOWEDIPS=0.0.0.0/0
     volumes:
       - ${DOCKER_PATH_PERSISTENT}/wireward/config:/config
       - ${DOCKER_PATH_PERSISTENT}/wireward/modules:/lib/modules
     restart: always
     ports:
+      # Port for WireGuard-UI
+      - "5000:5000"
+      # Port of the WireGuard VPN server
       - 51820:51820/udp
     sysctls:
       - net.ipv4.conf.all.src_valid_mark=1
