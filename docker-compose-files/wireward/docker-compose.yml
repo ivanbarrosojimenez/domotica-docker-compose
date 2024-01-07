@@ -10,10 +10,10 @@ services:
       - PUID=1
       - PGID=1
       - TZ=${DOCKER_TZ}
-      #- SERVERPORT=51820
+      - SERVERPORT=51820
       - PEERS=10
-      #- PEERDNS=auto
-      #- INTERNAL_SUBNET=192.168.0.0
+      - PEERDNS=auto
+      - INTERNAL_SUBNET=192.168.0.0
       - ALLOWEDIPS=0.0.0.0/0
     volumes:
       - ${DOCKER_PATH_PERSISTENT}/wireward/config:/config
