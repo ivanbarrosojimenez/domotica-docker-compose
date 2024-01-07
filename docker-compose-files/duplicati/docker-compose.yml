@@ -9,7 +9,7 @@ services:
     healthcheck:
       test: "curl -Lk -fsS http://localhost:8200 || exit 1"
     # Recommendation: Duplicati needs root user to get access to all files
-    # user: "${DOCKER_ROOTPUID:-1000}:${DOCKER_ROOTPGID:-1000}"
+    user: "${DOCKER_ROOTPUID:-0}:${DOCKER_ROOTPGID:-0}"
     network_mode: bridge
     ports:
       - 8200:8200
