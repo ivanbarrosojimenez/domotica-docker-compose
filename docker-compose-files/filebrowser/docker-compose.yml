@@ -3,7 +3,7 @@ version: "2.1"
 services:
   filebrowser:
     pull_policy: always
-    user: root
+    user: ivan
     image: 	filebrowser/filebrowser:latest
     container_name: ${DOCKER_CONTAINER_NAME_PREFIX}filebrowser
     hostname: filebrowser
