@@ -3,7 +3,7 @@ services:
   wireguard:
     image: linuxserver/wireguard
     container_name: ${DOCKER_CONTAINER_NAME_PREFIX}wireguard
-    network_mode: host
+    #network_mode: host
     cap_add:
       - NET_ADMIN
       - SYS_MODULE
