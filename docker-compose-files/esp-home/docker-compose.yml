@@ -8,13 +8,13 @@ services:
       - /etc/localtime:/etc/localtime:ro
     restart: always
     privileged: true
-    network: host
+    network_mode: "host"
     environment:
       - USERNAME=${ESP_USER}
       - PASSWORD=${ESP_PASS}
   mdns-repeater:
-      image: monstrenyatko/mdns-repeater
-      container_name: mdns-repeater
-      restart: unless-stopped
-      command: mdns-repeater-app -f ens18 br-d0742ca7ace0 #eg mdns-repeater-app -f eth0 br-abcdefghijk
-      network_mode: "host"
+    image: monstrenyatko/mdns-repeater
+    container_name: mdns-repeater
+    restart: unless-stopped
+    command: mdns-repeater-app -f ens18 br-d0742ca7ace0 #eg mdns-repeater-app -f eth0 br-abcdefghijk
+    network_mode: "host"
