@@ -8,8 +8,7 @@ services:
       - /etc/localtime:/etc/localtime:ro
     restart: always
     privileged: true
-    networks:
-      - npm
+    network: host
     environment:
       - USERNAME=${ESP_USER}
       - PASSWORD=${ESP_PASS}
@@ -19,7 +18,3 @@ services:
       restart: unless-stopped
       command: mdns-repeater-app -f ens18 br-d0742ca7ace0 #eg mdns-repeater-app -f eth0 br-abcdefghijk
       network_mode: "host"
-
-networks:
-  npm:
-    external: true
