@@ -18,7 +18,7 @@ services:
       - ALLOWEDIPS=0.0.0.0/0
     volumes:
       - ${DOCKER_PATH_PERSISTENT}/wireward/config:/config
-      - ${DOCKER_PATH_PERSISTENT}/wireward/modules:/lib/modules
+      - /lib/modules:/lib/modules
     ports:
       - 51820:51820/udp
     sysctls:
