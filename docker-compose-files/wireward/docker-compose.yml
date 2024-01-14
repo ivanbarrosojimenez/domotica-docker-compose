@@ -19,7 +19,6 @@ services:
     volumes:
       - ${DOCKER_PATH_PERSISTENT}/wireward/config:/config
       - ${DOCKER_PATH_PERSISTENT}/wireward/modules:/lib/modules
-    restart: always
     ports:
       - 51820:51820/udp
     sysctls:
