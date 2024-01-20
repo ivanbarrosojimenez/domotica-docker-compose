@@ -12,7 +12,7 @@ services:
       - PGID=1
       - TZ=${DOCKER_TZ}
       - SERVERPORT=51820
-      #- SERVERURL=wireguard.domain.com
+      - SERVERURL=bjxtreme.duckdns.org
       - PEERS=5
       - PEERDNS=192.168.1.2
       #- INTERNAL_SUBNET=10.13.13.0
