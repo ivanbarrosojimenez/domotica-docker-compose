@@ -14,7 +14,7 @@ services:
       - SERVERPORT=51820
       #- SERVERURL=wireguard.domain.com
       - PEERS=5
-      - PEERDNS=1.1.1.1
+      - PEERDNS=192.168.1.2
       #- INTERNAL_SUBNET=10.13.13.0
       - ALLOWEDIPS=192.168.1.0/24
     volumes:
