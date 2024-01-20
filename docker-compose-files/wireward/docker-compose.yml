@@ -12,10 +12,11 @@ services:
       - PGID=1
       - TZ=${DOCKER_TZ}
       - SERVERPORT=51820
+      - SERVERURL=wireguard.domain.com
       - PEERS=5
-      - PEERDNS=auto
+      - PEERDNS=1.1.1.1
       - INTERNAL_SUBNET=10.13.13.0
-      - ALLOWEDIPS=0.0.0.0/0
+      - ALLOWEDIPS=192.168.1.0/24
     volumes:
       - ${DOCKER_PATH_PERSISTENT}/wireward/config:/config
       - /lib/modules:/lib/modules
