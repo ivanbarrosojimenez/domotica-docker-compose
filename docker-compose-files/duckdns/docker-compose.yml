@@ -9,7 +9,7 @@ services:
       - PUID=1 #optional
       - PGID=1 #optional
       - TZ=${DOCKER_TZ} #optional
-      #- SUBDOMAINS=
+      - SUBDOMAINS=bjxtreme.duckdns.org
       - TOKEN=8bc6d34e-53d1-46c0-b3c2-99434f841e49
       - UPDATE_IP=ipv4 #optional
       - LOG_FILE=false #optional
