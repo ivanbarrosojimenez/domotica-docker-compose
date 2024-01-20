@@ -1,0 +1,18 @@
+version: "3.5"
+
+services:
+  duckdns:
+    image: lscr.io/linuxserver/duckdns:latest
+    container_name: ${DOCKER_CONTAINER_NAME_PREFIX}duckdns
+    network_mode: host #optional
+    environment:
+      - PUID=1 #optional
+      - PGID=1 #optional
+      - TZ=${DOCKER_TZ} #optional
+      #- SUBDOMAINS=
+      - TOKEN=8bc6d34e-53d1-46c0-b3c2-99434f841e49
+      - UPDATE_IP=ipv4 #optional
+      - LOG_FILE=false #optional
+    volumes:
+      - ${DOCKER_PATH_PERSISTENT}/duckdns/config:/config #optional
+    restart: unless-stopped
