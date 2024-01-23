@@ -17,6 +17,8 @@ services:
       - 9001:9001
     environment:
       - TZ=${DOCKER_TZ}
+      - PUID=${DOCKER_ROOTPUID:1} #$(id -u)
+      - PGID=${DOCKER_ROOTPGID:1} #$(id -g)  
     restart: always
 
 networks:
