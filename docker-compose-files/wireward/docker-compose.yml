@@ -15,7 +15,7 @@ services:
       - SERVERURL=bjxtreme.duckdns.org
       - PEERS=5
       - LOG_CONFS=true
-      - PEERDNS=192.168.1.2
+      - PEERDNS=192.168.1.1
       - INTERNAL_SUBNET=192.168.1.1
       #- ALLOWEDIPS=0.0.0.0/0
       - ALLOWEDIPS=192.168.1.1/24
