@@ -22,6 +22,6 @@ services:
       - TZ=${DOCKER_TZ}
     healthcheck:
       test: curl --fail http://localhost || exit 1
-      interval: 1s
-      timeout: 1s
+      interval: 120s
+      timeout: 10s
       retries: 5
