@@ -20,3 +20,8 @@ services:
       - PUID=${DOCKER_ROOTPUID:-1} #$(id -u)
       - PGID=${DOCKER_ROOTPGID:-27} #$(id -g)  
       - TZ=${DOCKER_TZ}
+    healthcheck:
+      test: curl --silent http://localhost:8086 >/dev/null; if [[ $$? == 52 ]]; then echo 0; else echo 1; fi
+      interval: 120s
+      timeout: 10s
+      retries: 5
