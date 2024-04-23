@@ -21,7 +21,7 @@ services:
       - PGID=${DOCKER_ROOTPGID:-27} #$(id -g)  
       - TZ=${DOCKER_TZ}
     healthcheck:
-      test: curl --silent http://localhost:8086 >/dev/null; if [[ $$? == 52 ]]; then echo 0; else echo 1; fi
-      interval: 120s
+      test: curl --silent http://localhost:8087 >/dev/null; if [[ $$? == 52 ]]; then echo 0; else echo 1; fi
+      interval: 20s
       timeout: 10s
       retries: 5
