@@ -5,10 +5,10 @@ services:
     image: adguard/adguardhome:latest
     container_name: ${DOCKER_CONTAINER_NAME_PREFIX}adguardhome
     hostname: adguardhome
-    restart: always
+    restart: unless-stopped
     healthcheck:
       test: "wget -nv -t1 --spider http://localhost:3000 || exit 1"
-   networks:
+    networks:
       domotica_macvlan0:
         ipv4_address: ${DOCKER_IPV4}
     ports:
