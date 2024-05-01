@@ -7,7 +7,7 @@ services:
     hostname: adguardhome
     restart: unless-stopped
     healthcheck:
-      test: "wget -nv -t1 --spider http://localhost:3000 || exit 1"
+      test: "wget -nv -t1 --spider http://localhost:80 || exit 1"
     networks:
       domotica_macvlan0:
         ipv4_address: ${DOCKER_IPV4}
