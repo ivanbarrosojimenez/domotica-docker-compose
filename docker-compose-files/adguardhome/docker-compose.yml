@@ -8,7 +8,9 @@ services:
     restart: always
     healthcheck:
       test: "wget -nv -t1 --spider http://localhost:3000 || exit 1"
-    network_mode: bridge
+   networks:
+      domotica_macvlan0:
+        ipv4_address: ${DOCKER_IPV4}
     ports:
       - 3000:3000/tcp
       # Plain DNS
@@ -37,3 +39,6 @@ services:
       - ${DOCKER_PATH_TEMPORARY}/traextor_certs:/opt/adguardhome/certs:ro
     environment:
       - TZ=${DOCKER_TZ}
+networks:
+  domotica_macvlan0:
+    external: true
