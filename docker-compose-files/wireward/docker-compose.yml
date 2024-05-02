@@ -15,10 +15,10 @@ services:
       - SERVERURL=bjxtreme.duckdns.org
       - PEERS=5
       - LOG_CONFS=true
-      #- PEERDNS=192.168.1.1
+      - PEERDNS=192.168.1.3
       - INTERNAL_SUBNET=192.168.1.1
-      #- ALLOWEDIPS=0.0.0.0/0
-      - ALLOWEDIPS=192.168.1.1/24
+      - ALLOWEDIPS=0.0.0.0/0
+      #- ALLOWEDIPS=192.168.1.1/24
     volumes:
       - ${DOCKER_PATH_PERSISTENT}/wireward/config:/config
       - ${DOCKER_PATH_PERSISTENT}/wireward/modules:/lib/modules
