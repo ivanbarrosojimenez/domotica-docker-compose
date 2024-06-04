@@ -20,7 +20,7 @@ services:
           max-file: "3"   
       restart: unless-stopped
       healthcheck:
-      test: "curl -Lk -fsS http://localhost:8200 || exit 1"
+        test: "curl -Lk -fsS http://localhost:8200 || exit 1"
 networks:
   domotica_macvlan0:
     external: true
