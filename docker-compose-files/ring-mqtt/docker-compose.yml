@@ -20,7 +20,10 @@ services:
           max-file: "3"   
       restart: unless-stopped
       healthcheck:
-        test: "ping localhost || exit 1"
+        test: ["CMD", "ping", "-c", "1", "localhost"]
+        interval: 30s
+        timeout: 10s
+        retries: 3
 networks:
   domotica_macvlan0:
     external: true
