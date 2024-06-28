@@ -20,7 +20,7 @@ services:
     restart: unless-stopped
     #devices:
       # Make sure this matched your adapter location
-    #  - /dev/serial/by-id/usb-Texas_Instruments_TI_CC2531_USB_CDC___0X00124B0018ED3DDF-if00:/dev/ttyACM0
+      - /dev/serial/by-id/Silicon_Labs_Sonoff_Zigbee_3.0_USB_Dongle_Plus_0001-if00-port0:/dev/ttyUSB0
     group_add:
       - dialout
     user: 1:1
