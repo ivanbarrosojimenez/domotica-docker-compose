@@ -20,12 +20,12 @@ services:
       - PUID=1 #$(id -u)
       - PGID=1 #$(id -g)  
     restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "mosquitto_sub", "-t", "$$SYS/#", "-C", "1", "-i", "healthcheck", "-W", "3"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 20s
+    #healthcheck:
+    #  test: ["CMD", "mosquitto_sub", "-t", "$$SYS/#", "-C", "1", "-i", "healthcheck", "-W", "3"]
+    #  interval: 30s
+    #  timeout: 10s
+    #  retries: 5
+    #  start_period: 20s
 networks:
   domotica_macvlan0:
     external: true
