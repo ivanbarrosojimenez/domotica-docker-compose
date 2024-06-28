@@ -22,11 +22,14 @@ services:
       # Make sure this matched your adapter location
       #- /dev/serial/by-id/usb-Silicon_Labs_Sonoff_Zigbee_3.0_USB_Dongle_Plus_0001-if00:/dev/ttyUSB0
       - /dev/ttyUSB0:/dev/ttyUSB0
-
     group_add:
       - dialout
     user: 0:0
-
+    healthcheck:
+      test: ["CMD", "/usr/bin/wget", "-q", "-O -", "http://127.0.0.1:8080"]
+      interval: 60s
+      timeout: 5s
+      retries: 3
 networks:
   domotica_macvlan0:
     external: true
