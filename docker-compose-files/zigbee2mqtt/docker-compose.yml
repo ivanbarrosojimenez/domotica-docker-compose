@@ -18,7 +18,7 @@ services:
       # Frontend port
       - 8080:8080
     restart: unless-stopped
-    #devices:
+    devices:
       # Make sure this matched your adapter location
       - /dev/serial/by-id/Silicon_Labs_Sonoff_Zigbee_3.0_USB_Dongle_Plus_0001-if00-port0:/dev/ttyUSB0
     group_add:
