@@ -20,7 +20,7 @@ services:
     restart: unless-stopped
     devices:
       # Make sure this matched your adapter location
-      - /dev/serial/by-id/Silicon_Labs_Sonoff_Zigbee_3.0_USB_Dongle_Plus_0001-if00-port0:/dev/ttyUSB0
+      port: /dev/ttyUSB0
     group_add:
       - dialout
     user: 1:1
