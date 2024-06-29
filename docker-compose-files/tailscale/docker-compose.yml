@@ -16,8 +16,15 @@ services:
       - net_admin
       - sys_module
     restart: unless-stopped
+    networks:
+      domotica_macvlan0:
+        ipv4_address: ${DOCKER_IPV4}
   nginx:
     image: nginx
     depends_on:
       - tailscale-nginx
     network_mode: service:tailscale-nginx
+
+networks:
+  domotica_macvlan0:
+    external: true
