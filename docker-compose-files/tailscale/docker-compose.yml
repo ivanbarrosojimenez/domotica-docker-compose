@@ -5,7 +5,7 @@ services:
     image: tailscale/tailscale:latest
     hostname: tailscale-nginx
     environment:
-      - TS_AUTHKEY=tskey-client-notAReal-OAuthClientSecret1Atawk
+      - TS_AUTHKEY=${TAILSCALE-KEY}
       - TS_EXTRA_ARGS=--advertise-tags=tag:container
       - TS_STATE_DIR=/var/lib/tailscale
       - TS_USERSPACE=false
