@@ -1,7 +1,7 @@
 version: "3.8"
 services:
   zigbee2mqtt:
-    image: koenkk/zigbee2mqtt
+    image: koenkk/zigbee2mqtt:latest
     container_name: ${DOCKER_CONTAINER_NAME_PREFIX}zigbee2mqtt
     mac_address: ${DOCKER_CONTAINER_MAC}
     networks:
