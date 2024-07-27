@@ -2,7 +2,7 @@ version: "3.9"
 
 x-backend: &common
   image: papermerge/papermerge:3.0.3
-  container_name: ${DOCKER_CONTAINER_NAME_PREFIX}paper-merge
+  container_name: ${DOCKER_CONTAINER_NAME_PREFIX}papermerge
   environment:
       PAPERMERGE__SECURITY__SECRET_KEY: ${APP_KEY}
       PAPERMERGE__AUTH__USERNAME: ${PAPER_USER}
