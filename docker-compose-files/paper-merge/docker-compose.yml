@@ -1,0 +1,30 @@
+version: "3.9"
+
+x-backend: &common
+  image: papermerge/papermerge:3.0.3
+  container_name: ${DOCKER_CONTAINER_NAME_PREFIX}paper-merge
+  environment:
+      PAPERMERGE__SECURITY__SECRET_KEY: ${APP_KEY}
+      PAPERMERGE__AUTH__USERNAME: ${PAPER_USER}
+      PAPERMERGE__AUTH__PASSWORD: ${PAPER_PASS}
+      PAPERMERGE__REDIS__URL: redis://redis:6379/0
+  volumes:
+      - ${DOCKER_PATH_PERSISTENT}/paper-merge/data:/db
+      - ${DOCKER_PATH_PERSISTENT}/paper-merge/index_db:/core_app/index_db
+      - ${DOCKER_PATH_PERSISTENT}/paper-merge/media:/core_app/media
+services:
+  web:
+    <<: *common
+    ports:
+     - "12000:80"
+    depends_on:
+      - redis
+  worker:
+    <<: *common
+    command: worker
+  redis:
+    image: redis:6
+volumes:
+  data:
+  index_db:
+  media:
