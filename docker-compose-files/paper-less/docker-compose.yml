@@ -1,25 +1,51 @@
-# - Run 'docker compose pull'.
-# - Run 'docker compose run --rm webserver createsuperuser' to create a user.
-# - Run 'docker compose up -d'.
+# Docker Compose file for running paperless from the Docker Hub.
+# This file contains everything paperless needs to run.
+# Paperless supports amd64, arm and arm64 hardware.
+#
+# All compose files of paperless configure paperless in the following way:
+#
+# - Paperless is (re)started on system boot, if it was running before shutdown.
+# - Docker volumes for storing data are managed by Docker.
+# - Folders for importing and exporting files are created in the same directory
+#   as this file and mounted to the correct folders inside the container.
+# - Paperless listens on port 8010.
+#
+# In addition to that, this Docker Compose file adds the following optional
+# configurations:
+#
+# - Instead of SQLite (default), PostgreSQL is used as the database server.
+#
+# To install and update paperless with this file, do the following:
+#
+# - Open portainer Stacks list and click 'Add stack'
+# - Paste the contents of this file and assign a name, e.g. 'paperless'
+# - Upload 'docker-compose.env' by clicking on 'Load variables from .env file'
+# - Modify the environment variables as needed
+# - Click 'Deploy the stack' and wait for it to be deployed
+# - Open the list of containers, select paperless_webserver_1
+# - Click 'Console' and then 'Connect' to open the command line inside the container
+# - Run 'python3 manage.py createsuperuser' to create a user
+# - Exit the console
+#
+# For more extensive installation and update instructions, refer to the
+# documentation.
+
 services:
   broker:
-    container_name: ${DOCKER_CONTAINER_NAME_PREFIX}broker-paperless
     image: docker.io/library/redis:7
     restart: unless-stopped
     volumes:
-      - ${DOCKER_PATH_PERSISTENT}/paperless/redisdata:/data
+      - redisdata:/data
 
   db:
-    image: docker.io/library/mariadb:11
+    image: docker.io/library/postgres:16
     restart: unless-stopped
     volumes:
-      - ${DOCKER_PATH_PERSISTENT}/paperless/dbdata:/var/lib/mysql
+      - ${DOCKER_PATH_PERSISTENT}:/var/lib/postgresql/data
     environment:
-      MARIADB_HOST: paperless
-      MARIADB_DATABASE: $MARIADB_DATABASE
-      MARIADB_USER: $MARIADB_USER
-      MARIADB_PASSWORD: $MARIADB_PASSWORD
-      MARIADB_ROOT_PASSWORD: $MARIADB_ROOT_PASSWORD
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASS}
 
   webserver:
     image: ghcr.io/paperless-ngx/paperless-ngx:latest
@@ -27,43 +53,21 @@ services:
     depends_on:
       - db
       - broker
-      - gotenberg
-      - tika
     ports:
-      - "8004:8000"
+      - "8010:8000"
     volumes:
-      - ${DOCKER_PATH_PERSISTENT}/paperless/data:/usr/src/paperless/data
-      - ${DOCKER_PATH_PERSISTENT}/paperless/media:/usr/src/paperless/media
-      - ${DOCKER_PATH_PERSISTENT}/paperless/export:/usr/src/paperless/export
-      - ${DOCKER_PATH_PERSISTENT}/paperless/consume:/usr/src/paperless/consume
-    env_file: .env
+      - ${DOCKER_PATH_PERSISTENT}:/usr/src/paperless/data
+      - ${DOCKER_PATH_PERSISTENT}:/usr/src/paperless/media
+      - ${DOCKER_PATH_PERSISTENT}:/usr/src/paperless/export
+      - ${DOCKER_PATH_PERSISTENT}:/usr/src/paperless/consume
     environment:
       PAPERLESS_REDIS: redis://broker:6379
-      PAPERLESS_DBENGINE: mariadb
       PAPERLESS_DBHOST: db
-      PAPERLESS_DBUSER: $MARIADB_USER # only needed if non-default username
-      PAPERLESS_DBPASS: $MARIADB_PASSWORD # only needed if non-default password
-      PAPERLESS_DBPORT: 3306
-      PAPERLESS_TIKA_ENABLED: 1
-      PAPERLESS_TIKA_GOTENBERG_ENDPOINT: http://gotenberg:4000
-      PAPERLESS_TIKA_ENDPOINT: http://tika:9998
-
-  gotenberg:
-    image: docker.io/gotenberg/gotenberg:8.7
-    restart: unless-stopped
-    # The gotenberg chromium route is used to convert .eml files. We do not
-    # want to allow external content like tracking pixels or even javascript.
-    command:
-      - "gotenberg"
-      - "--chromium-disable-javascript=true"
-      - "--chromium-allow-list=file:///tmp/.*"
-
-  tika:
-    image: docker.io/apache/tika:latest
-    restart: unless-stopped
+    env_file:
+      - stack.env
 
 volumes:
   data:
   media:
-  dbdata:
+  pgdata:
   redisdata:
