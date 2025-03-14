@@ -1,0 +1,24 @@
+version: "3.7"
+
+services:
+  adguardhome:
+    image: adguard/adguardhome:latest
+    container_name: adguardhome-local
+    hostname: adguardhome
+    restart: unless-stopped
+    healthcheck:
+      test: "wget -nv -t1 --spider http://localhost:80 || exit 1"
+      interval: 30s
+      retries: 3
+    network_mode: host  # Usar la red del anfitrión
+    ports:
+      - "3000:3000/tcp"        # Interfaz web de AdGuard Home
+      - "53:53/tcp"            # DNS normal (TCP)
+      - "53:53/udp"            # DNS normal (UDP)
+      - "853:853/tcp"          # DNS sobre TLS (Opcional)
+      - "443:443/tcp"          # DNS sobre HTTPS (Opcional)
+    volumes:
+      - ${DOCKER_PATH_TEMPORARY}/adguardhome_work:/opt/adguardhome/work:rw
+      - ${DOCKER_PATH_PERSISTENT}/adguardhome_config:/opt/adguardhome/conf:rw
+    environment:
+      - TZ=Europe/Madrid       # Ajusta la zona horaria si es necesario
