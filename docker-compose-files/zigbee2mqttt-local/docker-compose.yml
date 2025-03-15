@@ -1,0 +1,28 @@
+version: "3.8"
+services:
+  zigbee2mqtt:
+    image: koenkk/zigbee2mqtt:latest
+    container_name: zigbee2mqtt-local
+    environment:
+      - PUID=1
+      - PGID=1
+      - TZ=${DOCKER_TZ}
+    volumes:
+      - ${DOCKER_PATH_PERSISTENT}/zigbee2mqtt/data:/app/data
+      - ${DOCKER_PATH_PERSISTENT}/zigbee2mqtt/run/udev:/run/udev:ro
+    ports:
+      # Frontend port
+      - 8080:8080
+    restart: unless-stopped
+    devices:
+      # Make sure this matched your adapter location
+      #- /dev/serial/by-id/usb-Silicon_Labs_Sonoff_Zigbee_3.0_USB_Dongle_Plus_0001-if00:/dev/ttyUSB0
+      - ${DOCKER_DONGLE:-/dev/ttyUSB0}:/dev/ttyUSB0
+    group_add:
+      - dialout
+    user: 0:0
+    healthcheck:
+      test: ["CMD", "/usr/bin/wget", "-q", "-O -", "http://127.0.0.1:8080"]
+      interval: 60s
+      timeout: 5s
+      retries: 3
