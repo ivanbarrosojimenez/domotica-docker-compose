@@ -1,0 +1,19 @@
+version: "3.4"
+
+services:
+  plex:
+    image: linuxserver/plex
+    container_name: ${DOCKER_CONTAINER_NAME_PREFIX}plex
+    network_mode: host
+    environment:
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+      - VERSION=docker
+      - TZ=${TZ:-Europe/Madrid}
+    volumes:
+      - ${DOCKER_PATH_PERSISTENT}/plex/config:/config
+      - ${DOCKER_PATH_MEDIA}/Peliculas:/media/movies
+      - ${DOCKER_PATH_MEDIA}/Series:/media/tv
+      - ${DOCKER_PATH_MEDIA}/Musica:/media/music
+      - ${DOCKER_PATH_MEDIA}/Otros\ videos:/media/other
+    restart: unless-stopped
