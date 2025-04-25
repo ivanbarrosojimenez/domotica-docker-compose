@@ -11,6 +11,8 @@ services:
       - VERSION=docker
       - TZ=${TZ:-Europe/Madrid}
       - PLEX_CLAIM=${PLEX_CLAIM}
+    ports:
+      - "32400:32400"
     volumes:
       - ${DOCKER_PATH_PERSISTENT}/plex/config:/config
       - ${DOCKER_PATH_MEDIA}/Peliculas:/media/movies
