@@ -10,6 +10,7 @@ services:
       - PGID=${DOCKER_ROOTPGID:-1}
       - VERSION=docker
       - TZ=${TZ:-Europe/Madrid}
+      - PLEX_CLAIM=${PLEX_CLAIM}
     volumes:
       - ${DOCKER_PATH_PERSISTENT}/plex/config:/config
       - ${DOCKER_PATH_MEDIA}/Peliculas:/media/movies
