@@ -3,15 +3,13 @@ version: "3.8"
 services:
   netshoot:
     image: nicolaka/netshoot
-    container_name: netshoot_media
     command: tail -f /dev/null
     networks:
       - media_net
-    restart: unless-stopped
 
 networks:
   media_net:
     driver: bridge
     ipam:
       config:
-        - subnet: 172.20.0.0/24
+        - subnet: 192.168.250.0/24
