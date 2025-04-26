@@ -1,73 +1,58 @@
-# Docker Compose file for running paperless from the Docker Hub.
-# This file contains everything paperless needs to run.
-# Paperless supports amd64, arm and arm64 hardware.
-#
-# All compose files of paperless configure paperless in the following way:
-#
-# - Paperless is (re)started on system boot, if it was running before shutdown.
-# - Docker volumes for storing data are managed by Docker.
-# - Folders for importing and exporting files are created in the same directory
-#   as this file and mounted to the correct folders inside the container.
-# - Paperless listens on port 8010.
-#
-# In addition to that, this Docker Compose file adds the following optional
-# configurations:
-#
-# - Instead of SQLite (default), PostgreSQL is used as the database server.
-#
-# To install and update paperless with this file, do the following:
-#
-# - Open portainer Stacks list and click 'Add stack'
-# - Paste the contents of this file and assign a name, e.g. 'paperless'
-# - Upload 'docker-compose.env' by clicking on 'Load variables from .env file'
-# - Modify the environment variables as needed
-# - Click 'Deploy the stack' and wait for it to be deployed
-# - Open the list of containers, select paperless_webserver_1
-# - Click 'Console' and then 'Connect' to open the command line inside the container
-# - Run 'python3 manage.py createsuperuser' to create a user
-# - Exit the console
-#
-# For more extensive installation and update instructions, refer to the
-# documentation.
+version: "3.8"
 
 services:
   broker:
-    image: docker.io/library/redis:7
+    image: 'docker.io/library/redis:7'
     restart: unless-stopped
     volumes:
-      - redisdata:/data
+      - '${DOCKER_PATH_PERSISTENT}/paperless/redisdata:/data'
+    networks:
+      - infra_net
 
   db:
-    image: docker.io/library/postgres:16
+    image: 'docker.io/library/postgres:16'
     restart: unless-stopped
     volumes:
-      - ${DOCKER_PATH_PERSISTENT}:/var/lib/postgresql/data
+      - '${DOCKER_PATH_PERSISTENT}/paperless/postgresql:/var/lib/postgresql/data'
     environment:
-      POSTGRES_DB: ${POSTGRES_DB}
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASS}
+      POSTGRES_DB: '${POSTGRES_DB}'
+      POSTGRES_USER: '${POSTGRES_USER}'
+      POSTGRES_PASSWORD: '${POSTGRES_PASS}'
+    networks:
+      - infra_net
 
   webserver:
-    image: ghcr.io/paperless-ngx/paperless-ngx:latest
+    image: 'ghcr.io/paperless-ngx/paperless-ngx:latest'
     restart: unless-stopped
     depends_on:
       - db
       - broker
     ports:
-      - "8010:8000"
+      - '8010:8000'
     volumes:
-      - ${DOCKER_PATH_PERSISTENT}:/usr/src/paperless/data
-      - ${DOCKER_PATH_PERSISTENT}:/usr/src/paperless/media
-      - ${DOCKER_PATH_PERSISTENT}:/usr/src/paperless/export
-      - ${DOCKER_PATH_PERSISTENT}:/usr/src/paperless/consume
+      - '${DOCKER_PATH_PERSISTENT}/paperless/data:/usr/src/paperless/data'
+      - '${DOCKER_PATH_PERSISTENT}/paperless/media:/usr/src/paperless/media'
+      - '${DOCKER_PATH_PERSISTENT}/paperless/export:/usr/src/paperless/export'
+      - '${DOCKER_PATH_PERSISTENT}/paperless/consume:/usr/src/paperless/consume'
     environment:
-      PAPERLESS_REDIS: redis://broker:6379
-      PAPERLESS_DBHOST: db
+      TZ: ${DOCKER_TZ}
+      PUID: 1
+      PGID: 1
+      PAPERLESS_DBHOST: 'db'
+      PAPERLESS_REDIS: 'redis://broker:6379'
+      PAPERLESS_ADMIN_USER: ${PAPER_USER}
+      PAPERLESS_ADMIN_PASSWORD: ${APP_KEY}
     env_file:
       - stack.env
+    networks:
+      - infra_net
 
 volumes:
   data:
   media:
   pgdata:
   redisdata:
+
+networks:
+  infra_net:
+    external: true
