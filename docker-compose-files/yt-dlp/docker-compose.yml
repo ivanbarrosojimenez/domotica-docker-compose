@@ -2,7 +2,7 @@ version: "3.8"
 
 services:
   downloader:
-    image: ghcr.io/yt-dlp/yt-dlp:latest
+    image: ghcr.io/mikenye/docker-ytdl-sub:latest
     container_name: yt-downloader
     entrypoint: tail -f /dev/null  # Mantiene el contenedor vivo esperando comandos
     volumes:
