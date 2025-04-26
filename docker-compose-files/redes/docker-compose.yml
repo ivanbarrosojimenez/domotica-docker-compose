@@ -1,0 +1,8 @@
+version: "3.8"
+
+networks:
+  media_net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/24
