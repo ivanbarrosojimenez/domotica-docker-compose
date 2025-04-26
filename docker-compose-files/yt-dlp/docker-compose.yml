@@ -1,0 +1,16 @@
+version: "3.8"
+
+services:
+  downloader:
+    image: ghcr.io/yt-dlp/yt-dlp:latest
+    container_name: yt-downloader
+    entrypoint: tail -f /dev/null  # Mantiene el contenedor vivo esperando comandos
+    volumes:
+      - ${DOCKER_PATH_PERSISTENT}/downloads:/downloads
+    networks:
+      - infra_net
+    restart: unless-stopped
+
+networks:
+  infra_net:
+    external: true
