@@ -1,12 +1,32 @@
 version: "3.8"
 
 services:
-  downloader:
-    image: ghcr.io/axel669/yt-dlp:latest
-    container_name: yt-downloader
-    entrypoint: tail -f /dev/null  # Mantiene el contenedor vivo esperando comandos
+  ytdl-material:
+    image: tzahi12345/youtubedl-material:latest
+    container_name: ytdl-material
+    ports:
+      - "8998:17442"
     volumes:
-      - ${DOCKER_PATH_PERSISTENT}/yt-dlp/downloads:/downloads
+      - ${DOCKER_PATH_PERSISTENT}/downloads:/app/video
+      - ${DOCKER_PATH_PERSISTENT}/audio:/app/audio
+      - ${DOCKER_PATH_PERSISTENT}/subscriptions:/app/subscriptions
+      - ${DOCKER_PATH_PERSISTENT}/users:/app/users
+      - ${DOCKER_PATH_PERSISTENT}/config:/app/appdata
+    environment:
+      - ytdl_mongodb_connection_string=mongodb://mongo:27017
+      - ALLOW_CONFIG_MUTATIONS=true
+      - TZ=Europe/Madrid
+    depends_on:
+      - mongo
+    networks:
+      - infra_net
+    restart: unless-stopped
+
+  mongo:
+    image: mongo
+    container_name: ytdl-mongo
+    volumes:
+      - ${DOCKER_PATH_PERSISTENT}/mongo-data:/data/db
     networks:
       - infra_net
     restart: unless-stopped
