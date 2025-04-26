@@ -16,5 +16,6 @@ services:
     restart: unless-stopped
 
 networks:
-  media_net:
+  infra_net:
     external: true
+    name: infra_net
