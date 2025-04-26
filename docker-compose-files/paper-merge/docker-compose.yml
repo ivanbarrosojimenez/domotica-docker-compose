@@ -1,41 +1,57 @@
-version: "3.9"
-
-x-backend: &common
-  image: papermerge/papermerge:3.0.3
-  container_name: ${DOCKER_CONTAINER_NAME_PREFIX}papermerge
-  environment:
-    PAPERMERGE__SECURITY__SECRET_KEY: ${APP_KEY}
-    PAPERMERGE__AUTH__USERNAME: ${PAPER_USER}
-    PAPERMERGE__AUTH__PASSWORD: ${PAPER_PASS}
-    PAPERMERGE__REDIS__URL: redis://redis:6379/0
-  volumes:
-    - ${DOCKER_PATH_PERSISTENT}/paper-merge/data:/db
-    - ${DOCKER_PATH_PERSISTENT}/paper-merge/index_db:/core_app/index_db
-    - ${DOCKER_PATH_PERSISTENT}/paper-merge/media:/core_app/media
-  networks:
-    - infra_net
-  restart: unless-stopped
+version: "3.8"
 
 services:
-  web:
-    <<: *common
-    ports:
-      - "12000:80"
-    depends_on:
-      - redis
-  worker:
-    <<: *common
-    command: worker
-  redis:
-    image: redis:6
+  broker:
+    image: 'docker.io/library/redis:7'
+    restart: unless-stopped
+    volumes:
+      - '${DOCKER_PATH_PERSISTENT}/paperless/redisdata:/data'
     networks:
       - infra_net
+
+  db:
+    image: 'docker.io/library/postgres:16'
     restart: unless-stopped
+    volumes:
+      - '${DOCKER_PATH_PERSISTENT}/paperless/postgresql:/var/lib/postgresql/data'
+    environment:
+      POSTGRES_DB: '${POSTGRES_DB}'
+      POSTGRES_USER: '${POSTGRES_USER}'
+      POSTGRES_PASSWORD: '${POSTGRES_PASS}'
+    networks:
+      - infra_net
+
+  webserver:
+    image: 'ghcr.io/paperless-ngx/paperless-ngx:latest'
+    restart: unless-stopped
+    depends_on:
+      - db
+      - broker
+    ports:
+      - '8010:8000'
+    volumes:
+      - '${DOCKER_PATH_PERSISTENT}/paperless/data:/usr/src/paperless/data'
+      - '${DOCKER_PATH_PERSISTENT}/paperless/media:/usr/src/paperless/media'
+      - '${DOCKER_PATH_PERSISTENT}/paperless/export:/usr/src/paperless/export'
+      - '${DOCKER_PATH_PERSISTENT}/paperless/consume:/usr/src/paperless/consume'
+    environment:
+      TZ: ${DOCKER_TZ}
+      PUID: 1
+      PGID: 1
+      PAPERLESS_DBHOST: 'db'
+      PAPERLESS_REDIS: 'redis://broker:6379'
+      PAPERLESS_ADMIN_USER: ${PAPER_USER}
+      PAPERLESS_ADMIN_PASSWORD: ${APP_KEY}
+    env_file:
+      - stack.env
+    networks:
+      - infra_net
 
 volumes:
   data:
-  index_db:
   media:
+  pgdata:
+  redisdata:
 
 networks:
   infra_net:
