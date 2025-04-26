@@ -23,7 +23,7 @@ services:
     restart: unless-stopped
 
   mongo:
-    image: mongo
+    image: mongo:4.4
     container_name: ytdl-mongo
     volumes:
       - ${DOCKER_PATH_PERSISTENT}/mongo-data:/data/db
