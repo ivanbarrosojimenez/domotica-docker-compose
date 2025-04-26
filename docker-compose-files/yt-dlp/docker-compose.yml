@@ -7,11 +7,11 @@ services:
     ports:
       - "8998:17442"
     volumes:
-      - ${DOCKER_PATH_PERSISTENT}/downloads:/app/video
-      - ${DOCKER_PATH_PERSISTENT}/audio:/app/audio
-      - ${DOCKER_PATH_PERSISTENT}/subscriptions:/app/subscriptions
-      - ${DOCKER_PATH_PERSISTENT}/users:/app/users
-      - ${DOCKER_PATH_PERSISTENT}/config:/app/appdata
+      - ${DOCKER_PATH_PERSISTENT}/yt-dlp/downloads:/app/video
+      - ${DOCKER_PATH_PERSISTENT}/yt-dlp/audio:/app/audio
+      - ${DOCKER_PATH_PERSISTENT}/yt-dlp/subscriptions:/app/subscriptions
+      - ${DOCKER_PATH_PERSISTENT}/yt-dlp/users:/app/users
+      - ${DOCKER_PATH_PERSISTENT}/yt-dlp/config:/app/appdata
     environment:
       - ytdl_mongodb_connection_string=mongodb://mongo:27017
       - ALLOW_CONFIG_MUTATIONS=true
