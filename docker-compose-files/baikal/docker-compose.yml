@@ -12,7 +12,7 @@ services:
       - ${DOCKER_PATH_PERSISTENT}/baikal/config:/var/www/baikal/Specific
       - ${DOCKER_PATH_PERSISTENT}/baikal/data:/var/www/baikal/baikal-data
     networks:
-      - media_net
+      - infra_net
     restart: unless-stopped
 
 networks:
