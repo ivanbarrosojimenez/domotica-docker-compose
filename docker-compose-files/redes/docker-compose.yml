@@ -9,7 +9,8 @@ services:
 
 networks:
   media_net:
-    driver: bridge
+    driver: overlay
+    attachable: true
     ipam:
       config:
         - subnet: 10.10.0.0/24
