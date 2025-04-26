@@ -1,9 +1,8 @@
-version: "3.4"
+version: "3.8"
 
 services:
   baikal:
     image: ckulka/baikal
-    container_name: ${DOCKER_CONTAINER_NAME_PREFIX}baikal
     ports:
       - "${DOCKER_BAIKAL_PORT:-8800}:80"
     environment:
@@ -13,9 +12,7 @@ services:
       - ${DOCKER_PATH_PERSISTENT}/baikal/data:/var/www/baikal/baikal-data
     networks:
       - infra_net
-    restart: unless-stopped
 
 networks:
   infra_net:
     external: true
-    name: infra_net
