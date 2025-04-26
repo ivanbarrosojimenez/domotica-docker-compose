@@ -1,19 +1,14 @@
 version: "3.4"
 
 services:
-  plex:
-    image: linuxserver/plex
-    container_name: ${DOCKER_CONTAINER_NAME_PREFIX}plex
-    network_mode: host
+  baikal:
+    image: ckulka/baikal
+    container_name: ${DOCKER_CONTAINER_NAME_PREFIX}baikal
+    ports:
+      - "${DOCKER_BAIKAL_PORT:-8800}:80"
     environment:
-      - PUID=${DOCKER_ROOTPUID:-1}
-      - PGID=${DOCKER_ROOTPGID:-1}
-      - VERSION=docker
       - TZ=${TZ:-Europe/Madrid}
     volumes:
-      - ${DOCKER_PATH_PERSISTENT}/plex/config:/config
-      - ${DOCKER_PATH_MEDIA}/Peliculas:/media/movies
-      - ${DOCKER_PATH_MEDIA}/Series:/media/tv
-      - ${DOCKER_PATH_MEDIA}/Musica:/media/music
-      - ${DOCKER_PATH_MEDIA}/Otros\ videos:/media/other
+      - ${DOCKER_PATH_PERSISTENT}/baikal/config:/var/www/baikal/Specific
+      - ${DOCKER_PATH_PERSISTENT}/baikal/data:/var/www/baikal/baikal-data
     restart: unless-stopped
