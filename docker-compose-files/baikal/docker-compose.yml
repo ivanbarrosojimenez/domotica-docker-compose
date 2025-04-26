@@ -11,4 +11,10 @@ services:
     volumes:
       - ${DOCKER_PATH_PERSISTENT}/baikal/config:/var/www/baikal/Specific
       - ${DOCKER_PATH_PERSISTENT}/baikal/data:/var/www/baikal/baikal-data
+    networks:
+      - media_net
     restart: unless-stopped
+
+networks:
+  media_net:
+    external: true
