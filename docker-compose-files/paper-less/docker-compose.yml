@@ -42,8 +42,6 @@ services:
       PAPERLESS_REDIS: 'redis://broker:6379'
       PAPERLESS_ADMIN_USER: ${PAPER_USER}
       PAPERLESS_ADMIN_PASSWORD: ${APP_KEY}
-    env_file:
-      - stack.env
     networks:
       - infra_net
 
