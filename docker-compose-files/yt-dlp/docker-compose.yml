@@ -6,7 +6,7 @@ services:
     container_name: yt-downloader
     entrypoint: tail -f /dev/null  # Mantiene el contenedor vivo esperando comandos
     volumes:
-      - ${DOCKER_PATH_PERSISTENT}/downloads:/downloads
+      - ${DOCKER_PATH_PERSISTENT}/yt-dlp/downloads:/downloads
     networks:
       - infra_net
     restart: unless-stopped
