@@ -10,7 +10,7 @@ services:
     volumes:
       - ${DOCKER_PATH_PERSISTENT}/sonarr:/config
       - ${DOCKER_PATH_MEDIA}/Series:/tv
-      - ${DOCKER_PATH_MEDIA}/Descargas:/downloads
+      - ${DOCKER_PATH_MEDIA}/Descargas/Series:/downloads
     networks:
       - infra_net
     deploy:
