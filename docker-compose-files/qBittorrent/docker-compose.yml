@@ -7,7 +7,7 @@ services:
       - PUID=${DOCKER_ROOTPUID:-1000}
       - PGID=${DOCKER_ROOTPGID:-1000}
       - TZ=${TZ:-Europe/Madrid}
-      - WEBUI_PORT=8090
+      - WEBUI_PORT=8091
     volumes:
       - ${DOCKER_PATH_PERSISTENT}/qbittorrent:/config
       - ${DOCKER_PATH_MEDIA}/Descargas/Series:/downloads
