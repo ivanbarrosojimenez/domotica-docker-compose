@@ -11,6 +11,8 @@ services:
       - ${DOCKER_PATH_PERSISTENT}/sonarr:/config
       - ${DOCKER_PATH_MEDIA}/Series:/tv
       - ${DOCKER_PATH_MEDIA}/Descargas/Series:/downloads
+    ports:
+      - 8989:8989
     networks:
       - infra_net
     deploy:
