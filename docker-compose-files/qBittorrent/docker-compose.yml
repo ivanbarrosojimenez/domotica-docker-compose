@@ -14,8 +14,8 @@ services:
     networks:
       - infra_net
     ports:
-      - target: 8090
-        published: 8090
+      - target: 8091
+        published: 8091
         protocol: tcp
         mode: host
       - target: 6881
