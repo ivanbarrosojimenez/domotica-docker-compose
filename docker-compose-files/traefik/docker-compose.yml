@@ -1,29 +1,54 @@
-version: "2"
+version: "3.8"
 
 services:
   traefik:
-    image: traefik:latest
-    container_name: ${DOCKER_CONTAINER_NAME_PREFIX}traefik
-    hostname: traefik
-    restart: always
-    healthcheck:
-      test: "wget -nv -t1 --spider http://localhost:8080 || exit 1"
-    network_mode: bridge
+    image: traefik:v2.11
+    command:
+      - "--api.dashboard=true"
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.swarmMode=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
     ports:
-      - 443:443/tcp
-      - 80:80/tcp
-      - 8081:8080/tcp
+      - target: 80
+        published: 80
+        protocol: tcp
+        mode: host
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
-      - ${DOCKER_PATH_PERSISTENT}/traefik_data:/etc/traefik:rw
-      # Must change logs folder. See tips in README.
-      - ${DOCKER_PATH_TEMPORARY}/traefik_log:/var/log/traefik:rw
+    networks:
+      - infra_net
+    deploy:
+      placement:
+        constraints:
+          - node.role == manager
+      restart_policy:
+        condition: any
+      mode: replicated
+      replicas: 1
+
+  filebrowser:
+    image: filebrowser/filebrowser:s6
     environment:
-      - TZ=${DOCKER_TZ}
-      # Optional: Environments to configure with Azure DNS
-      - AZURE_CLIENT_ID=${DOCKER_TRAEFIK_AZURECLIENTID}
-      - AZURE_CLIENT_SECRET=${DOCKER_TRAEFIK_AZURECLIENTSECRET}
-      - AZURE_ENVIRONMENT=${DOCKER_TRAEFIK_AZUREENVIRONMENT}
-      - AZURE_RESOURCE_GROUP=${DOCKER_TRAEFIK_AZURERESOURCEGROUP}
-      - AZURE_SUBSCRIPTION_ID=${DOCKER_TRAEFIK_AZURESUBSCRIPTIONID}
-      - AZURE_TENANT_ID=${DOCKER_TRAEFIK_AZURETENANTID}
+      - PUID=${DOCKER_ROOTPUID:-1}
+      - PGID=${DOCKER_ROOTPGID:-1}
+      - TZ=${TZ:-Europe/Madrid}
+    volumes:
+      - ${DOCKER_PATH_PERSISTENT}/filebrowser/data:/srv
+      - ${DOCKER_PATH_PERSISTENT}/filebrowser/config:/config
+    networks:
+      - infra_net
+    deploy:
+      mode: replicated
+      replicas: 2
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.filebrowser.rule=Host(`filebrowser.local`)"
+        - "traefik.http.services.filebrowser.loadbalancer.server.port=8080"
+      restart_policy:
+        condition: any
+
+networks:
+  infra_net:
+    external: true
