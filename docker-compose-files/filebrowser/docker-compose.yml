@@ -4,9 +4,6 @@ services:
   filebrowser:
     image: filebrowser/filebrowser:s6
     hostname: filebrowser
-    restart: always
-    ports:
-      - 8086:80
     volumes:
       - ${DOCKER_PATH_PERSISTENT}:/data/docker
       - ${DOCKER_PATH_TEMPORARY}:/data/docker-logs
@@ -15,14 +12,23 @@ services:
     environment:
       - PUID=${DOCKER_ROOTPUID:-1}
       - PGID=${DOCKER_ROOTPGID:-27}
-      - TZ=${DOCKER_TZ}
+      - TZ=${DOCKER_TZ:-Europe/Madrid}
+    networks:
+      - infra_net
+    deploy:
+      mode: replicated
+      replicas: 2
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.filebrowser.rule=Host(`filebrowser.local`)"
+        - "traefik.http.services.filebrowser.loadbalancer.server.port=80"
+      restart_policy:
+        condition: any
     healthcheck:
       test: curl --fail http://localhost || exit 1
       interval: 30s
       timeout: 10s
       retries: 5
-    networks:
-      - infra_net
 
 networks:
   infra_net:
