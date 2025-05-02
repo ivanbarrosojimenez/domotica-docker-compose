@@ -1,0 +1,23 @@
+version: "3.8"
+
+services:
+  jellyfin:
+    image: jellyfin/jellyfin:latest
+    container_name: jellyfin
+    ports:
+      - "8096:8096"  # Acceso web (sin HTTPS)
+    volumes:
+      - ${DOCKER_PATH_PERSISTENT}/jellyfin/config:/config
+      - ${DOCKER_PATH_MEDIA}/Peliculas:/media/movies
+      - ${DOCKER_PATH_MEDIA}/Series:/media/tv
+      - ${DOCKER_PATH_MEDIA}/Musica:/media/music
+      - ${DOCKER_PATH_MEDIA}/Otros\ videos:/media/other
+    environment:
+      - TZ=Europe/Madrid
+    networks:
+      - infra_net
+    restart: unless-stopped
+
+networks:
+  infra_net:
+    external: true
