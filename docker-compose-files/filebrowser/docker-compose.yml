@@ -17,7 +17,7 @@ services:
       - infra_net
     deploy:
       mode: replicated
-      replicas: 2
+      replicas: ${DOCKER_REPLICAS:-1}
       labels:
         - "traefik.enable=true"
         - "traefik.http.routers.filebrowser.rule=Host(`filebrowser.local`)"
