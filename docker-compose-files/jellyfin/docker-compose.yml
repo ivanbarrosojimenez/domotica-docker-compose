@@ -11,6 +11,7 @@ services:
       - ${DOCKER_PATH_MEDIA}/Peliculas:/media/movies
       - ${DOCKER_PATH_MEDIA}/Series:/media/tv
       - ${DOCKER_PATH_MEDIA}/Musica:/media/music
+      - ${DOCKER_PATH_MEDIA}/Libros:/media/libros
     environment:
       - TZ=Europe/Madrid
     networks:
