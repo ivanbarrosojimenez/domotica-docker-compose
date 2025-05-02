@@ -1,14 +1,10 @@
-version: "2.1"
+version: "3.8"
 
 services:
   filebrowser:
-    pull_policy: always
-    user: root
-    image: 	filebrowser/filebrowser:s6
-    container_name: ${DOCKER_CONTAINER_NAME_PREFIX}filebrowser
+    image: filebrowser/filebrowser:s6
     hostname: filebrowser
     restart: always
-    network_mode: bridge
     ports:
       - 8086:80
     volumes:
@@ -17,11 +13,17 @@ services:
       - ${DOCKER_PATH_PERSISTENT}/filebrowser/config:/config:rw
       - ${DOCKER_PATH_PERSISTENT}/filebrowser/database:/database:rw
     environment:
-      - PUID=${DOCKER_ROOTPUID:-1} #$(id -u)
-      - PGID=${DOCKER_ROOTPGID:-27} #$(id -g)  
+      - PUID=${DOCKER_ROOTPUID:-1}
+      - PGID=${DOCKER_ROOTPGID:-27}
       - TZ=${DOCKER_TZ}
     healthcheck:
       test: curl --fail http://localhost || exit 1
       interval: 30s
       timeout: 10s
       retries: 5
+    networks:
+      - infra_net
+
+networks:
+  infra_net:
+    external: true
