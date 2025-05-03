@@ -3,12 +3,12 @@ version: "3.8"
 services:
   qbittorrent:
     image: lscr.io/linuxserver/qbittorrent:latest
-    container_name: qbittorrent
+    container_name: ${DOCKER_CONTAINER_NAME_PREFIX}qbittorrent
     hostname: qbittorrent
     restart: unless-stopped
     networks:
       domotica_macvlan0:
-        ipv4_address: 192.168.1.153
+        ipv4_address: ${DOCKER_IPV4}
     environment:
       - PUID=${DOCKER_ROOTPUID:-1000}
       - PGID=${DOCKER_ROOTPGID:-1000}
@@ -16,4 +16,8 @@ services:
       - WEBUI_PORT=8091
     volumes:
       - ${DOCKER_PATH_PERSISTENT}/qbittorrent:/config
-      - ${DOCKER_PATH_MEDIA}/Descargas:/downloads
+      - ${DOCKER_PATH_MEDIA}/Descargas/Series:/downloads
+
+networks:
+  domotica_macvlan0:
+    external: true
