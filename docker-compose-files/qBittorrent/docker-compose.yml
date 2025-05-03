@@ -16,4 +16,4 @@ services:
       - WEBUI_PORT=8091
     volumes:
       - ${DOCKER_PATH_PERSISTENT}/qbittorrent:/config
-      - ${DOCKER_PATH_MEDIA}/Descargas/Series:/downloads
+      - ${DOCKER_PATH_MEDIA}/Descargas:/downloads
