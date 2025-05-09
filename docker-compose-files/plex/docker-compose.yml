@@ -1,21 +1,28 @@
 version: "3.4"
 
 services:
-  plex:
+    plex:
     image: linuxserver/plex
-    container_name: ${DOCKER_CONTAINER_NAME_PREFIX}plex
-    network_mode: host
     environment:
       - PUID=${DOCKER_ROOTPUID:-1}
       - PGID=${DOCKER_ROOTPGID:-1}
       - VERSION=docker
       - TZ=${TZ:-Europe/Madrid}
       - PLEX_CLAIM=${PLEX_CLAIM}
-    ports:
-      - "32400:32400"
     volumes:
       - ${DOCKER_PATH_PERSISTENT}/plex/config:/config
       - ${DOCKER_PATH_MEDIA}/Peliculas:/media/movies
       - ${DOCKER_PATH_MEDIA}/Series:/media/tv
       - ${DOCKER_PATH_MEDIA}/Musica:/media/music
-    restart: unless-stopped
+    networks:
+      - infra_net
+    ports:
+      - target: 32400
+        published: 32400
+        protocol: tcp
+        mode: host
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: any
+
