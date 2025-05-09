@@ -1,7 +1,7 @@
 version: "3.4"
 
 services:
-    plex:
+  plex:
     image: linuxserver/plex
     environment:
       - PUID=${DOCKER_ROOTPUID:-1}
