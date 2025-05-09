@@ -22,3 +22,6 @@ services:
       replicas: 1
       restart_policy:
         condition: any
+networks:
+  infra_net:
+    external: true
