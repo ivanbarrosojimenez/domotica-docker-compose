@@ -42,8 +42,13 @@ services:
       PAPERLESS_REDIS: 'redis://broker:6379'
       PAPERLESS_ADMIN_USER: ${PAPER_USER}
       PAPERLESS_ADMIN_PASSWORD: ${APP_KEY}
-     # PAPERLESS_URL_PREFIX: '/paperless'
-     # FORCE_SCRIPT_NAME: '/paperless'
+      PAPERLESS_SECRET_KEY: ${APP_KEY}
+      PAPERLESS_URL: 'https://paperless.media.local'
+      PAPERLESS_ALLOWED_HOSTS: 'paperless.media.local'
+      PAPERLESS_CSRF_TRUSTED_ORIGINS: 'https://paperless.media.local'
+      SESSION_COOKIE_SECURE: 'true'
+      CSRF_COOKIE_SECURE: 'true'
+      SECURE_PROXY_SSL_HEADER: 'HTTP_X_FORWARDED_PROTO,https'
     networks:
       - infra_net
 
