@@ -10,6 +10,8 @@ services:
       - "--providers.docker.swarmMode=true"
       - "--providers.docker.exposedbydefault=false"
       - "--entrypoints.web.address=:80"
+      - "--entrypoints.mqtt1.address=:1883"
+      - "--entrypoints.mqtt2.address=:1884"
     ports:
       - target: 80
         published: 80
@@ -20,11 +22,11 @@ services:
         protocol: tcp
         mode: host
       - target: 1883
-        published: 1885
+        published: 1883
         protocol: tcp
         mode: host
       - target: 1884
-        published: 1885
+        published: 1884
         protocol: tcp
         mode: host
       - target: 1885
