@@ -1,4 +1,4 @@
-version: "3.4"
+version: "3.8"
 
 services:
   plex:
@@ -26,3 +26,6 @@ services:
       restart_policy:
         condition: any
 
+networks:
+  infra_net:
+    external: true
