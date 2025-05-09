@@ -15,14 +15,16 @@ services:
         published: 80
         protocol: tcp
         mode: host
-    
       - target: 443
         published: 443
         protocol: tcp
         mode: host
-    
       - target: 1883
         published: 1883
+        protocol: tcp
+        mode: host
+      - target: 1885
+        published: 1885
         protocol: tcp
         mode: host
     volumes:
