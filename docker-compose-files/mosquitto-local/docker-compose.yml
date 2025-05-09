@@ -1,16 +1,23 @@
-version: "3"
-
-services:
   mosquitto:
     image: eclipse-mosquitto:latest
-    container_name: ${DOCKER_CONTAINER_NAME_PREFIX}mosquitto-local
     environment:
-      - TZ=Europe/Madrid    
+      - TZ=Europe/Madrid
     volumes:
       - ${DOCKER_PATH_PERSISTENT}/mosquitto/config:/mosquitto/config
       - ${DOCKER_PATH_PERSISTENT}/mosquitto/data:/mosquitto/data:rw
       - ${DOCKER_PATH_TEMPORARY}/mosquitto/log:/mosquitto/log:rw
+    networks:
+      - infra_net
     ports:
-      - 1883:1883
-      - 9001:9001
-    restart: unless-stopped
+      - target: 1883
+        published: 1883
+        protocol: tcp
+        mode: host
+      - target: 9001
+        published: 9001
+        protocol: tcp
+        mode: host
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: any
