@@ -42,8 +42,8 @@ services:
       PAPERLESS_REDIS: 'redis://broker:6379'
       PAPERLESS_ADMIN_USER: ${PAPER_USER}
       PAPERLESS_ADMIN_PASSWORD: ${APP_KEY}
-      PAPERLESS_URL_PREFIX: '/paperless'
-      FORCE_SCRIPT_NAME: '/paperless'
+     # PAPERLESS_URL_PREFIX: '/paperless'
+     # FORCE_SCRIPT_NAME: '/paperless'
     networks:
       - infra_net
 
