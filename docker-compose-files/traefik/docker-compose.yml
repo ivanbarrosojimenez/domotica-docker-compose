@@ -19,6 +19,14 @@ services:
         published: 443
         protocol: tcp
         mode: host
+      - target: 1883
+        published: 1885
+        protocol: tcp
+        mode: host
+      - target: 1884
+        published: 1885
+        protocol: tcp
+        mode: host
       - target: 1885
         published: 1885
         protocol: tcp
