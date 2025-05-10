@@ -2,67 +2,43 @@ version: "3.8"
 
 services:
   traefik:
-    image: traefik:v2.11
-    command:
-      - "--api.dashboard=true"
-      - "--api.insecure=true"
-      - "--providers.docker=true"
-      - "--providers.docker.swarmMode=true"
-      - "--providers.docker.exposedbydefault=false"
-      - "--entrypoints.web.address=:80"
-      - "--entrypoints.mqtt1.address=:1884"
-      - "--entrypoints.mqtt2.address=:1885"
+    image: traefik:latest
     ports:
-      - target: 80
-        published: 80
-        protocol: tcp
-        mode: host
-      - target: 443
-        published: 443
-        protocol: tcp
-        mode: host
-      - target: 1884
-        published: 1884
-        protocol: tcp
-        mode: host
-      - target: 1885
-        published: 1885
-        protocol: tcp
-        mode: host
+      - "80:80"
+      - "443:443"
+      - "1884:1884"  # Para MQTT TCP
+      - "1885:1885"  # Para MQTT TCP
+      - "8000:8000"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ${DOCKER_PATH_PERSISTENT}/traefik/acme:/letsencrypt
+    configs:
+      - source: traefik_static_config
+        target: /etc/traefik/traefik.yml
+      - source: traefik_dynamic_config
+        target: /etc/traefik/dynamic.yml
+    secrets:
+      - media_local_crt
+      - media_local_key
     networks:
       - infra_net
     deploy:
-      placement:
-        constraints:
-          - node.role == manager
-      restart_policy:
-        condition: any
-      mode: replicated
       replicas: 1
-
-  filebrowser:
-    image: filebrowser/filebrowser:s6
-    environment:
-      - PUID=${DOCKER_ROOTPUID:-1}
-      - PGID=${DOCKER_ROOTPGID:-1}
-      - TZ=${TZ:-Europe/Madrid}
-    volumes:
-      - ${DOCKER_PATH_PERSISTENT}/filebrowser/data:/srv
-      - ${DOCKER_PATH_PERSISTENT}/filebrowser/config:/config
-    networks:
-      - infra_net
-    deploy:
-      mode: replicated
-      replicas: 2
-      labels:
-        - "traefik.enable=true"
-        - "traefik.http.routers.filebrowser.rule=Host(`filebrowser.local`)"
-        - "traefik.http.services.filebrowser.loadbalancer.server.port=8080"
       restart_policy:
         condition: any
 
 networks:
   infra_net:
+    external: true
+
+configs:
+  traefik_static_config:
+    external: true
+  traefik_dynamic_config:
+    external: true
+
+secrets:
+  media_local_crt:
+    external: true
+  media_local_key:
     external: true
