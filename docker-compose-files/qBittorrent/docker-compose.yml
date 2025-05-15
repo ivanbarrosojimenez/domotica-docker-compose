@@ -26,11 +26,6 @@ services:
         published: 6881
         protocol: udp
         mode: host
-    resources:
-      limits:
-        memory: 2G
-      reservations:
-        memory: 1G
     deploy:
       mode: replicated
       replicas: 1
@@ -39,6 +34,11 @@ services:
           - node.hostname == debian12
       restart_policy:
         condition: any
+      resources:
+        limits:
+          memory: 1G
+        reservations:
+          memory: 256M
 
 networks:
   infra_net:
