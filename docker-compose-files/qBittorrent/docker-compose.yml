@@ -26,6 +26,11 @@ services:
         published: 6881
         protocol: udp
         mode: host
+    resources:
+      limits:
+        memory: 2G
+      reservations:
+        memory: 1G
     deploy:
       mode: replicated
       replicas: 1
