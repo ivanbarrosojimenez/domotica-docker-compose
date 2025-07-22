@@ -7,6 +7,7 @@ services:
       networks:
         domotica_macvlan0:
           ipv4_address: ${DOCKER_IPV4}
+        infra_net:
       ports:
         - 8554:8554   # Enable RTSP port for external media player access
       privileged: true
@@ -26,4 +27,6 @@ services:
         retries: 3
 networks:
   domotica_macvlan0:
+    external: true
+  infra_net:
     external: true
