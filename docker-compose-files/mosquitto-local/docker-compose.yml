@@ -11,11 +11,11 @@ services:
       - infra_net
     ports:
       - target: ${MOSQ_PORT_INTERNAL:-1883}
-        published: ${MOSQ_PORT:1883}
+        published: ${MOSQ_PORT:-1883}
         protocol: tcp
         mode: host
       - target: ${MOSQ_WS_PORT_INTERNAL:-9001}
-        published: ${MOSQ_WS_PORT:9001}
+        published: ${MOSQ_WS_PORT:-9001}
         protocol: tcp
         mode: host
     deploy:
@@ -25,5 +25,6 @@ services:
 networks:
   infra_net:
     external: true
+
 
 
