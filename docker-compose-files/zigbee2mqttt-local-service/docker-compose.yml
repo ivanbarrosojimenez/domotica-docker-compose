@@ -8,9 +8,9 @@ services:
       - PGID=${DOCKER_ROOTPGID}
       - TZ=${DOCKER_TZ}
     volumes:
-      - ${DOCKER_PATH_PERSISTENT}/zigbee2mqtt-service/data:/app/data
-      - ${DOCKER_PATH_PERSISTENT}/zigbee2mqtt-service/run/udev:/run/udev:ro
-      - /dev/ttyUSB0:/dev/ttyUSB0
+      - ${DOCKER_PATH_PERSISTENT}/zigbee2mqtt/data:/app/data
+      - ${DOCKER_PATH_PERSISTENT}/zigbee2mqtt/run/udev:/run/udev:ro
+      - /dev/serial/by-id/usb-Silicon_Labs_Sonoff_Zigbee_3.0_USB_Dongle_Plus_0001-if00-port0:/dev/ttyUSB0
     ports:
       - 8080:8080
     user: 0:0
@@ -19,13 +19,12 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+    cap_add:
+      - SYS_TTY_CONFIG
     deploy:
       mode: replicated
       replicas: 1
       restart_policy:
         condition: on-failure
         delay: 5s
-        max_attempts: 3
         window: 60s
-
-
