@@ -22,7 +22,8 @@ services:
       - dialout
     user: 0:0
     healthcheck:
-      test: "nc -w3 $${MQTT_HOST} $${MQTT_PORT} < /dev/null || exit 1"
+      #test: "nc -w3 $${MQTT_HOST} $${MQTT_PORT} < /dev/null || exit 1"
+      test: ["CMD-SHELL", "sh -c 'nc -w3 $${MQTT_HOST} $${MQTT_PORT} < /dev/null >/dev/null 2>&1 || exit 1'"]
       interval: 10s
       timeout: 5s
       retries: 3
@@ -30,6 +31,7 @@ services:
       replicas: 1
       restart_policy:
         condition: any
+
 
 
 
