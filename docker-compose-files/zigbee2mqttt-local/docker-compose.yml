@@ -22,14 +22,15 @@ services:
       - dialout
     user: 0:0
     healthcheck:
-      test: ["CMD-SHELL", "nc -v -w3 $${MQTT_HOST} $${MQTT_PORT} < /dev/null || exit 1"]
-      interval: 60s
+      test: ["CMD-SHELL", "nc -w3 $${MQTT_HOST} $${MQTT_PORT} < /dev/null || exit 1"]
+      interval: 10s
       timeout: 5s
       retries: 3
     deploy:
       replicas: 1
       restart_policy:
         condition: any
+
 
 
 
