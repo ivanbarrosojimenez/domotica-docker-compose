@@ -1,0 +1,32 @@
+version: "3.8"
+
+services:
+  zigbee2mqtt:
+    image: koenkk/zigbee2mqtt:latest
+    environment:
+      - PUID=${DOCKER_ROOTPUID}
+      - PGID=${DOCKER_ROOTPGID}
+      - TZ=${DOCKER_TZ}
+    volumes:
+      - ${DOCKER_PATH_PERSISTENT}/zigbee2mqtt-service/data:/app/data
+      - ${DOCKER_PATH_PERSISTENT}/zigbee2mqtt-service/run/udev:/run/udev:ro
+    ports:
+      - 8080:8080
+    devices:
+      - ${DOCKER_DONGLE:-/dev/ttyUSB0}:/dev/ttyUSB0
+    group_add:
+      - dialout
+    user: 0:0
+    healthcheck:
+      test: ["CMD", "sh", "-c", "nc -z -w3 192.168.1.151 1883 || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    deploy:
+      mode: replicated
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 60s
