@@ -7,6 +7,8 @@ services:
       - PUID=1
       - PGID=1
       - TZ=${DOCKER_TZ}
+      - MQTT_HOST=${MQTT_HOST}
+      - MQTT_PORT=${MQTT_PORT:-1883}
     volumes:
       - ${DOCKER_PATH_PERSISTENT}/zigbee2mqtt/data:/app/data
       - ${DOCKER_PATH_PERSISTENT}/zigbee2mqtt/run/udev:/run/udev:ro
@@ -31,6 +33,7 @@ services:
       replicas: 1
       restart_policy:
         condition: any
+
 
 
 
