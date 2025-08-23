@@ -14,8 +14,6 @@ services:
       - 8080:8080
     devices:
       - ${DOCKER_DONGLE:-/dev/ttyUSB0}:/dev/ttyUSB0
-    group_add:
-      - dialout
     user: 0:0
     healthcheck:
       test: ["CMD", "sh", "-c", "nc -z -w3 192.168.1.151 1883 || exit 1"]
@@ -30,3 +28,4 @@ services:
         delay: 5s
         max_attempts: 3
         window: 60s
+
