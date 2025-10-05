@@ -34,6 +34,8 @@ services:
       - '${DOCKER_PATH_PERSISTENT}/paperless/media:/usr/src/paperless/media'
       - '${DOCKER_PATH_PERSISTENT}/paperless/export:/usr/src/paperless/export'
       - '${DOCKER_PATH_PERSISTENT}/paperless/consume:/usr/src/paperless/consume'
+      - '${DOCKER_PATH_TEMPORARY}/paperless/tmp:/tmp/paperless'
+      - '${DOCKER_PATH_TEMPORARY}/paperless/logs:/usr/src/paperless/logs'
     environment:
       TZ: ${DOCKER_TZ}
       PUID: 1
@@ -49,6 +51,8 @@ services:
       SESSION_COOKIE_SECURE: 'true'
       CSRF_COOKIE_SECURE: 'true'
       SECURE_PROXY_SSL_HEADER: 'HTTP_X_FORWARDED_PROTO,https'
+      PAPERLESS_SCRATCH_DIR: '/tmp/paperless'
+      PAPERLESS_LOGLEVEL: 'info'
     networks:
       - infra_net
 
@@ -61,3 +65,4 @@ volumes:
 networks:
   infra_net:
     external: true
+
