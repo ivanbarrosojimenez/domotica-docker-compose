@@ -68,7 +68,7 @@ services:
             fi;
           else
             echo "⏳ Canal FIFO vacío, reiniciando escucha en 5s...";
-            sleep 5;
+            sleep 10000;
             ( docker logs -f "$TARGET" > /tmp/logpipe 2>&1 & );
           fi;
         done
@@ -76,6 +76,7 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     restart: unless-stopped
+
 
 
 
