@@ -33,8 +33,8 @@ services:
           memory: 512M
       labels:
         - "traefik.enable=true"
-        - "traefik.docker.network=traefik_net"
-        - "traefik.http.routers.homebox.rule=Host(`homebox.ibjhome.es`)"
+        - "traefik.docker.network=infra_net"
+        - "traefik.http.routers.homebox.rule=Host(`homebox.media.local`)"
         - "traefik.http.routers.homebox.entrypoints=https"
         - "traefik.http.services.homebox.loadbalancer.server.port=7745"
         - "traefik.http.routers.homebox.tls=true"
@@ -44,4 +44,5 @@ services:
 networks:
   infra_net:
     external: true
+
 
