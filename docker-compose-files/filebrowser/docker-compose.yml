@@ -13,8 +13,8 @@ services:
         mode: ingress
 
     volumes:
-      - ${DOCKER_PATH_PERSISTENT}:/docker
-      - ${DOCKER_PATH_TEMPORARY}:/docker-logs
+      - ${DOCKER_PATH_PERSISTENT}:/data/docker
+      - ${DOCKER_PATH_TEMPORARY}:/data/docker-logs
       - ${DOCKER_PATH_PERSISTENT}/filebrowser/config:/config:rw
       - ${DOCKER_PATH_PERSISTENT}/filebrowser/database:/database:rw
 
