@@ -1,0 +1,37 @@
+version: "3.9"
+
+services:
+  uptime-kuma:
+    image: louislam/uptime-kuma:latest
+    container_name: ${DOCKER_CONTAINER_NAME_PREFIX}-uptime-kuma
+    environment:
+      - PUID=${DOCKER_ROOTPUID}
+      - PGID=${DOCKER_ROOTPGID}
+      - TZ=${DOCKER_TZ}
+    volumes:
+      - ${DOCKER_PATH_PERSISTENT}/uptime-kuma:/app/data
+    ports:
+      - target: ${UPTIME_KUMA_INTERNAL_PORT}
+        published: ${UPTIME_KUMA_EXTERNAL_PORT}
+        protocol: tcp
+        mode: ingress
+    networks:
+      - infra_net
+    deploy:
+      mode: replicated
+      replicas: ${UPTIME_KUMA_REPLICAS}
+      restart_policy:
+        condition: on-failure
+        delay: 10s
+        max_attempts: 3
+      resources:
+        reservations:
+          cpus: "${UPTIME_KUMA_RES_CPU}"
+          memory: ${UPTIME_KUMA_RES_MEM}
+        limits:
+          cpus: "${UPTIME_KUMA_LIM_CPU}"
+          memory: ${UPTIME_KUMA_LIM_MEM}
+
+networks:
+  infra_net:
+    external: true
