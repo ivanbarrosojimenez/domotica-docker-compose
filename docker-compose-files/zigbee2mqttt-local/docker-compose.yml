@@ -37,29 +37,18 @@ services:
         condition: any
     labels:
       - autoheal=true
-  autoheal:
-    image: willfarrell/autoheal
-    container_name: autoheal
-    restart: unless-stopped
-    environment:
-      - AUTOHEAL_CONTAINER_LABEL=all
-      - AUTOHEAL_INTERVAL=30
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
 
 
   watchdog:
     image: docker:cli
     container_name: zigbee2mqtt-watchdog
-    environment:
-      TARGET: "zigbee2mqtt-local"
     command: >
       sh -c '
-        echo "🔍 Watchdog iniciado, objetivo: ${TARGET}";
+        echo "🔍 Watchdog iniciado para contenedor: zigbee2mqtt-local";
         while true; do
-          docker logs --since 10s "${TARGET}" 2>&1 | grep "MQTT error: connect ECONNREFUSED" >/dev/null && {
-            echo "$(date): ⚠️  Error MQTT detectado — reiniciando ${TARGET}...";
-            docker restart "${TARGET}" >/dev/null 2>&1;
+          docker logs --since 10s zigbee2mqtt-local 2>&1 | grep "MQTT error: connect ECONNREFUSED" >/dev/null && {
+            echo "$(date): ⚠️  Error MQTT detectado — reiniciando zigbee2mqtt-local...";
+            docker restart zigbee2mqtt-local >/dev/null 2>&1;
             echo "$(date): 🌀 Reinicio ejecutado correctamente. Esperando 60 segundos antes de reanudar...";
             sleep 60;
           };
@@ -69,6 +58,8 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     restart: unless-stopped
+
+
 
 
 
