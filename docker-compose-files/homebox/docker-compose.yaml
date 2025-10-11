@@ -1,0 +1,36 @@
+version: "3.8"
+
+services:
+  homebox:
+    image: ghcr.io/hay-kot/homebox:latest
+    environment:
+      HBOX_LOG_LEVEL: info
+      HBOX_DB_TYPE: sqlite
+      HBOX_DB_PATH: /data/homebox.db
+      HBOX_WEB_PORT: "7745"
+      PUID: "${DOCKER_ROOTPUID}"
+      PGID: "${DOCKER_ROOTPGID}"
+      TZ: "${DOCKER_TZ}"
+    volumes:
+      - type: bind
+        source: ${DOCKER_PATH_PERSISTENT}/homebox
+        target: /data
+    ports:
+      - target: 7745
+        published: ${DOCKER_PORT_HOMEBOX}
+        protocol: tcp
+        mode: ingress
+    deploy:
+      mode: replicated
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+      resources:
+        reservations:
+          cpus: "0.10"
+          memory: 128M
+        limits:
+          cpus: "0.50"
+          memory: 512M
