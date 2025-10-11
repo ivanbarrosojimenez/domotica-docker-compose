@@ -55,14 +55,17 @@ services:
         echo "🔍 Monitorizando logs de zigbee2mqtt-local...";
         while true; do
           docker logs -f zigbee2mqtt-local 2>&1 |
-          while read -r line; do
+          while IFS= read -r line; do
+            echo "LOG: $line"
             if echo "$line" | grep -q "MQTT error: connect ECONNREFUSED"; then
-              echo "$(date): 🧠 Error MQTT detectado — reiniciando contenedor...";
+              echo "$(date): ⚠️  Error MQTT detectado — reiniciando contenedor zigbee2mqtt-local...";
               docker restart zigbee2mqtt-local >/dev/null 2>&1
+              echo "$(date): 🌀 Reinicio ejecutado, esperando 60 segundos..."
               sleep 60
               break
             fi
           done
+          echo "⏳ Reiniciando monitor de logs en 5 segundos..."
           sleep 5
         done
       '
