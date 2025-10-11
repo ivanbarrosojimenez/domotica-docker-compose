@@ -54,19 +54,23 @@ services:
       sh -c '
         TARGET="zigbee2mqtt-local";
         echo "🔍 Monitorizando logs del contenedor $TARGET...";
+        rm -f /tmp/logpipe;
+        mkfifo /tmp/logpipe;
+        ( docker logs -f "$TARGET" > /tmp/logpipe 2>&1 & );
         while true; do
-          stdbuf -oL docker logs -f $TARGET 2>&1 | while IFS= read -r line; do
-            echo "LOG: $line"
+          if read -r line < /tmp/logpipe; then
+            echo "LOG: $line";
             if echo "$line" | grep -q "MQTT error: connect ECONNREFUSED"; then
               echo "$(date): ⚠️  Error MQTT detectado — reiniciando contenedor $TARGET...";
-              docker restart $TARGET >/dev/null 2>&1
-              echo "$(date): 🌀 Reinicio ejecutado, esperando 60 segundos..."
-              sleep 60
-              break
-            fi
-          done
-          echo "⏳ Reiniciando monitor de logs en 5 segundos..."
-          sleep 5
+              docker restart "$TARGET" >/dev/null 2>&1;
+              echo "$(date): 🌀 Reinicio ejecutado, esperando 60 segundos...";
+              sleep 60;
+            fi;
+          else
+            echo "⏳ Canal FIFO vacío, reiniciando escucha en 5s...";
+            sleep 5;
+            ( docker logs -f "$TARGET" > /tmp/logpipe 2>&1 & );
+          fi;
         done
       '
     volumes:
