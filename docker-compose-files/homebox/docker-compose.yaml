@@ -17,7 +17,6 @@ services:
         target: /data
     networks:
       - infra_net
-      - traefik_net
     deploy:
       mode: replicated
       replicas: 1
@@ -45,5 +44,4 @@ services:
 networks:
   infra_net:
     external: true
-  traefik_net:
-    external: true
+
