@@ -20,8 +20,6 @@ services:
 
     environment:
       - TZ=${DOCKER_TZ}
-      - FB_USER=${FILEBROWSER_USER}
-      - FB_PASS=${FILEBROWSER_PASS}
       - PUID=${DOCKER_ROOTPUID:-1000}
       - PGID=${DOCKER_ROOTPGID:-1000}
     healthcheck:
