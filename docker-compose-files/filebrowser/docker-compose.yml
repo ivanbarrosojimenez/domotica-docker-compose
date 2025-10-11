@@ -21,7 +21,7 @@ services:
     environment:
       - TZ=${DOCKER_TZ}
       - PUID=${DOCKER_ROOTPUID:-1000}
-      - PGID=${DOCKER_ROOTPGID:-1000}
+      - PGID=${DOCKER_ROOTPUID:-1000}
     healthcheck:
       test: ["CMD-SHELL", "curl -fsS http://localhost:${FILEBROWSER_INTERNAL_PORT:-80}/ || exit 1"]
       interval: 30s
