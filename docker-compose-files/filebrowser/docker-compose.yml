@@ -2,7 +2,7 @@ version: "3.9"
 
 services:
   filebrowser:
-    image: filebrowser/filebrowser:s6
+    image: filebrowser/filebrowser:latest
     hostname: filebrowser
     restart: always
 
