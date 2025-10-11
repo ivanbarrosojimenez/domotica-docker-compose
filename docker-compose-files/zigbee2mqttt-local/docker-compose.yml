@@ -26,8 +26,8 @@ services:
     healthcheck:
       #test: "nc -w3 $${MQTT_HOST} $${MQTT_PORT} < /dev/null || exit 1"
       #test: ["CMD-SHELL", "sh -c 'nc -w3 $${MQTT_HOST} $${MQTT_PORT} < /dev/null >/dev/null 2>&1 || exit 1'"]
-      #test: ["CMD-SHELL", "wget -qO- http://localhost:8080/api/health | grep -q '\"mqtt\":true'"]
-      test: ["CMD-SHELL", "! grep -q 'MQTT error: connect ECONNREFUSED' /app/data/log/zigbee2mqtt.log || exit 1"]
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/api/health | grep -q '\"mqtt\":true'"]
+      #test: ["CMD-SHELL", "! grep -q 'MQTT error: connect ECONNREFUSED' /app/data/log/zigbee2mqtt.log || exit 1"]
       interval: 10s
       timeout: 3s
       retries: 1
@@ -47,6 +47,32 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
 
+  watchdog:
+    image: alpine:3.20
+    container_name: zigbee2mqtt-watchdog
+    command: >
+      sh -c '
+        echo "🔍 Monitorizando logs de zigbee2mqtt...";
+        while true; do
+          docker logs -f zigbee2mqtt-local 2>&1 |
+          while read -r line; do
+            echo "$line" | grep -q "MQTT error: connect ECONNREFUSED" && {
+              echo "$(date): error MQTT detectado, reiniciando contenedor...";
+              docker restart zigbee2mqtt-local >/dev/null 2>&1;
+              sleep 60;  # espera para evitar reinicios en bucle
+              break;
+            };
+          done;
+          sleep 5;
+        done
+      '
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    restart: unless-stopped
+    deploy:
+      mode: global
+      restart_policy:
+        condition: on-failure
 
 
 
