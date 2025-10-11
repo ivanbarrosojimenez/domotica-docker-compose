@@ -19,11 +19,9 @@ services:
       - ${DOCKER_PATH_PERSISTENT}/filebrowser/database:/database:rw
 
     environment:
-      - PUID=${DOCKER_ROOTPUID:-1000}
-      - PGID=${DOCKER_ROOTPGID:-1000}
       - TZ=${DOCKER_TZ}
-      - FB_USER=${FILEBROWSER_USER:-admin}
-      - FB_PASS=${FILEBROWSER_PASS:-admin123}
+      - FB_USER=${FILEBROWSER_USER}
+      - FB_PASS=${FILEBROWSER_PASS}
 
     healthcheck:
       test: ["CMD", "curl", "-fsS", "http://localhost:${FILEBROWSER_INTERNAL_PORT:-80}/health", "||", "exit", "1"]
