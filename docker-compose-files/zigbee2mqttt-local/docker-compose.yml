@@ -52,14 +52,15 @@ services:
     container_name: zigbee2mqtt-watchdog
     command: >
       sh -c '
-        echo "🔍 Monitorizando logs de zigbee2mqtt-local...";
+        TARGET="zigbee2mqtt-local";
+        echo "🔍 Monitorizando logs del contenedor $TARGET...";
         while true; do
-          docker logs -f zigbee2mqtt-local 2>&1 |
+          docker logs -f $TARGET 2>&1 |
           while IFS= read -r line; do
             echo "LOG: $line"
             if echo "$line" | grep -q "MQTT error: connect ECONNREFUSED"; then
-              echo "$(date): ⚠️  Error MQTT detectado — reiniciando contenedor zigbee2mqtt-local...";
-              docker restart zigbee2mqtt-local >/dev/null 2>&1
+              echo "$(date): ⚠️  Error MQTT detectado — reiniciando contenedor $TARGET...";
+              docker restart $TARGET >/dev/null 2>&1
               echo "$(date): 🌀 Reinicio ejecutado, esperando 60 segundos..."
               sleep 60
               break
@@ -72,10 +73,7 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     restart: unless-stopped
-    deploy:
-      mode: global
-      restart_policy:
-        condition: on-failure
+
 
 
 
