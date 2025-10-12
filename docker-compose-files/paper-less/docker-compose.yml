@@ -53,6 +53,9 @@ services:
       SECURE_PROXY_SSL_HEADER: 'HTTP_X_FORWARDED_PROTO,https'
       PAPERLESS_SCRATCH_DIR: '/tmp/paperless'
       PAPERLESS_LOGLEVEL: 'info'
+      PAPERLESS_GMAIL_OAUTH_CLIENT_ID: ${PAPERLESS_GMAIL_OAUTH_CLIENT_ID}
+      PAPERLESS_GMAIL_OAUTH_CLIENT_SECRET: ${PAPERLESS_GMAIL_OAUTH_CLIENT_SECRET}
+      PAPERLESS_URL: ${PAPERLESS_URL}
     networks:
       - infra_net
 
@@ -65,4 +68,5 @@ volumes:
 networks:
   infra_net:
     external: true
+
 
