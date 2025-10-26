@@ -1,0 +1,94 @@
+version: "3.9"
+
+services:
+  nextclouddb:
+    image: mariadb:10.6
+    environment:
+      - MYSQL_ROOT_PASSWORD=${NEXTCLOUD_DB_ROOT_PASSWORD}
+      - MYSQL_DATABASE=${NEXTCLOUD_DB_NAME}
+      - MYSQL_USER=${NEXTCLOUD_DB_USER}
+      - MYSQL_PASSWORD=${NEXTCLOUD_DB_PASSWORD}
+      - TZ=${DOCKER_TZ}
+    volumes:
+      - ${DOCKER_PATH_PERSISTENT}/nextcloud/nextclouddb:/var/lib/mysql
+    networks:
+      - infra_net
+    deploy:
+      mode: replicated
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+        delay: 10s
+        max_attempts: 3
+      resources:
+        reservations:
+          cpus: "${NEXTCLOUD_DB_RES_CPU}"
+          memory: ${NEXTCLOUD_DB_RES_MEM}
+        limits:
+          cpus: "${NEXTCLOUD_DB_LIM_CPU}"
+          memory: ${NEXTCLOUD_DB_LIM_MEM}
+
+  nextcloud_redis:
+    image: redis:alpine
+    command: ["redis-server", "--save", "60", "1", "--loglevel", "warning"]
+    volumes:
+      - ${DOCKER_PATH_PERSISTENT}/nextcloud/redis:/data
+    networks:
+      - infra_net
+    deploy:
+      mode: replicated
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+      resources:
+        reservations:
+          cpus: "${NEXTCLOUD_REDIS_RES_CPU}"
+          memory: ${NEXTCLOUD_REDIS_RES_MEM}
+        limits:
+          cpus: "${NEXTCLOUD_REDIS_LIM_CPU}"
+          memory: ${NEXTCLOUD_REDIS_LIM_MEM}
+
+
+  nextcloud:
+    image: nextcloud:latest
+    environment:
+      - PUID=${DOCKER_ROOTPUID}
+      - PGID=${DOCKER_ROOTPGID}
+      - TZ=${DOCKER_TZ}
+      - MYSQL_HOST=nextclouddb
+      - MYSQL_DATABASE=${NEXTCLOUD_DB_NAME}
+      - MYSQL_USER=${NEXTCLOUD_DB_USER}
+      - MYSQL_PASSWORD=${NEXTCLOUD_DB_PASSWORD}
+      - REDIS_HOST=nextcloud_redis
+      - REDIS_PORT=6379
+    volumes:
+      - ${DOCKER_PATH_PERSISTENT}/nextcloud/config:/var/www/html
+      - ${NEXTCLOUD_DATA_PATH}/data:/var/www/html/data
+    ports:
+      - target: 80
+        published: ${NEXTCLOUD_EXTERNAL_PORT}
+        protocol: tcp
+        mode: ingress
+    networks:
+      - infra_net
+    depends_on:
+      - nextclouddb
+      - nextcloud_redis
+    deploy:
+      mode: replicated
+      replicas: ${NEXTCLOUD_REPLICAS}
+      restart_policy:
+        condition: on-failure
+        delay: 10s
+        max_attempts: 3
+      resources:
+        reservations:
+          cpus: "${NEXTCLOUD_RES_CPU}"
+          memory: ${NEXTCLOUD_RES_MEM}
+        limits:
+          cpus: "${NEXTCLOUD_LIM_CPU}"
+          memory: ${NEXTCLOUD_LIM_MEM}
+
+networks:
+  infra_net:
+    external: true
