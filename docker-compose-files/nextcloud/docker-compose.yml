@@ -13,6 +13,12 @@ services:
       - ${DOCKER_PATH_PERSISTENT}/nextcloud/nextclouddb:/var/lib/mysql
     networks:
       - infra_net
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -u${NEXTCLOUD_DB_USER} -p${NEXTCLOUD_DB_PASSWORD} | grep 'mysqld is alive' || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 20s
     deploy:
       mode: replicated
       replicas: 1
@@ -35,6 +41,12 @@ services:
       - ${DOCKER_PATH_PERSISTENT}/nextcloud/redis:/data
     networks:
       - infra_net
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 10s
     deploy:
       mode: replicated
       replicas: 1
@@ -47,7 +59,6 @@ services:
         limits:
           cpus: "${NEXTCLOUD_REDIS_LIM_CPU}"
           memory: ${NEXTCLOUD_REDIS_LIM_MEM}
-
 
   nextcloud:
     image: nextcloud:latest
@@ -72,8 +83,16 @@ services:
     networks:
       - infra_net
     depends_on:
-      - nextclouddb
-      - nextcloud_redis
+      nextclouddb:
+        condition: service_healthy
+      nextcloud_redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost/status.php || exit 1"]
+      interval: 60s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
     deploy:
       mode: replicated
       replicas: ${NEXTCLOUD_REPLICAS}
