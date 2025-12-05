@@ -6,7 +6,6 @@ services:
     container_name: ytdl-material
     ports:
       - "8998:17442"
-    user: "${DOCKER_ROOTPUID:-1000}:${DOCKER_ROOTPGID:-1000}"
     volumes:
       - ${DOCKER_PATH_PERSISTENT}/yt-dlp/downloads:/app/video
       - ${DOCKER_PATH_PERSISTENT}/yt-dlp/audio:/app/audio
@@ -35,4 +34,5 @@ services:
 networks:
   infra_net:
     external: true
+
 
