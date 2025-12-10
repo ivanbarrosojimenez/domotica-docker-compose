@@ -26,7 +26,7 @@ services:
     healthcheck:
       #test: "nc -w3 $${MQTT_HOST} $${MQTT_PORT} < /dev/null || exit 1"
       #test: ["CMD-SHELL", "sh -c 'nc -w3 $${MQTT_HOST} $${MQTT_PORT} < /dev/null >/dev/null 2>&1 || exit 1'"]
-      test: ["CMD-SHELL", "wget -qO- http://$(hostname -i):8080 || exit 1"]
+      test: ["CMD-SHELL", "wget -qO- http://$$(hostname -i):8080 || exit 1"]
       #test: ["CMD-SHELL", "! grep -q 'MQTT error: connect ECONNREFUSED' /app/data/log/zigbee2mqtt.log || exit 1"]
       interval: 10s
       timeout: 3s
@@ -58,6 +58,7 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     restart: unless-stopped
+
 
 
 
