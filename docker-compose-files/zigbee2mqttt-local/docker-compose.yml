@@ -20,8 +20,6 @@ services:
       # Make sure this matched your adapter location
       #- /dev/serial/by-id/usb-Silicon_Labs_Sonoff_Zigbee_3.0_USB_Dongle_Plus_0001-if00:/dev/ttyUSB0
       - ${DOCKER_DONGLE:-/dev/ttyUSB0}:/dev/ttyUSB0
-    group_add:
-      - dialout
     user: 0:0
     healthcheck:
       #test: "nc -w3 $${MQTT_HOST} $${MQTT_PORT} < /dev/null || exit 1"
@@ -58,6 +56,7 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     restart: unless-stopped
+
 
 
 
