@@ -47,9 +47,9 @@ services:
         echo "🔍 Watchdog iniciado para contenedor: zigbee2mqtt-local";
         while true; do
           docker logs --since 60s zigbee2mqtt-local 2>&1 | grep -E "MQTT error: connect ECONNREFUSED|z2m: Not connected to MQTT server!" >/dev/null && {
-            echo "$(date): ⚠️  Error MQTT detectado — reiniciando zigbee2mqtt-local...";
+            echo "$$(date): ⚠️  Error MQTT detectado — reiniciando zigbee2mqtt-local...";
             docker restart zigbee2mqtt-local >/dev/null 2>&1;
-            echo "$(date): 🌀 Reinicio ejecutado correctamente. Esperando 60 segundos antes de reanudar...";
+            echo "$$(date): 🌀 Reinicio ejecutado correctamente. Esperando 60 segundos antes de reanudar...";
             sleep 60;
           };
           sleep 60;
@@ -58,6 +58,7 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     restart: unless-stopped
+
 
 
 
