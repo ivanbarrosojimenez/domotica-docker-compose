@@ -1,6 +1,7 @@
 services:
   mosquitto:
     image: eclipse-mosquitto:latest
+    user: "${DOCKER_ROOTPUID:-1000}:${DOCKER_ROOTPGID:-1000}"
     environment:
       - TZ=Europe/Madrid
     volumes:
@@ -25,6 +26,7 @@ services:
 networks:
   infra_net:
     external: true
+
 
 
 
