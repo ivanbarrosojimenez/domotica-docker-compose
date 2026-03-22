@@ -12,6 +12,7 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - ${DOCKER_PATH_PERSISTENT}/traefik/acme:/letsencrypt
+      - ${DOCKER_PATH_PERSISTENT}/step-ca/certs/root_ca.crt:/etc/traefik/certs/root_ca.crt:ro 
     configs:
       - source: traefik_static_config
         target: /etc/traefik/traefik.yml
