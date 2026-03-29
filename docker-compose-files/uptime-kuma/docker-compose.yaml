@@ -15,15 +15,41 @@ services:
         published: ${UPTIME_KUMA_EXTERNAL_PORT}
         protocol: tcp
         mode: ingress
+        
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:${UPTIME_KUMA_INTERNAL_PORT} || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+      
     networks:
       - infra_net
+      
+    placement:
+      constraints:
+        - node.hostname == ${NODE_HOSTNAME}  
     deploy:
       mode: replicated
       replicas: ${UPTIME_KUMA_REPLICAS}
+
       restart_policy:
-        condition: on-failure
+        condition: any
         delay: 10s
-        max_attempts: 3
+        window: 120s
+
+      update_config:
+        parallelism: 1
+        delay: 10s
+        order: start-first
+        failure_action: rollback
+        monitor: 30s
+
+      rollback_config:
+        parallelism: 1
+        delay: 10s
+        order: stop-first
+
       resources:
         reservations:
           cpus: "${UPTIME_KUMA_RES_CPU}"
@@ -31,6 +57,25 @@ services:
         limits:
           cpus: "${UPTIME_KUMA_LIM_CPU}"
           memory: ${UPTIME_KUMA_LIM_MEM}
+          
+      labels:
+        - "com.centurylinklabs.watchtower.scope=swarm"
+
+        - "traefik.enable=true"
+        - "traefik.swarm.network=infra_net"
+
+        - "traefik.http.routers.${STACK_KEY}-http.rule=Host(`${UPTIME_KUMA_HOST}`)"
+        - "traefik.http.routers.${STACK_KEY}-http.entrypoints=http"
+        - "traefik.http.routers.${STACK_KEY}-http.middlewares=redirect-to-https@file"
+        - "traefik.http.routers.${STACK_KEY}-http.service=noop@internal"
+
+        - "traefik.http.routers.${STACK_KEY}-https.rule=Host(`${UPTIME_KUMA_HOST}`)"
+        - "traefik.http.routers.${STACK_KEY}-https.entrypoints=https"
+        - "traefik.http.routers.${STACK_KEY}-https.tls.certresolver=step"
+        - "traefik.http.routers.${STACK_KEY}-https.service=${STACK_KEY}-svc"
+
+        - "traefik.http.services.${STACK_KEY}-svc.loadbalancer.server.port=${UPTIME_KUMA_INTERNAL_PORT}"
+
 
 networks:
   infra_net:
