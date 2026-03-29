@@ -17,7 +17,12 @@ services:
       - type: bind
         source: ${DOCKER_PATH_PERSISTENT}/homebox
         target: /data
-
+    ports:
+      - target: 7745
+        published: ${DOCKER_PORT_HOMEBOX}
+        protocol: tcp
+        mode: ingress
+        
     healthcheck:
       test: ["CMD-SHELL", "curl -fsS http://localhost:7745/ || exit 1"]
       interval: 30s
