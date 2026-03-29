@@ -3,30 +3,78 @@ version: "3.8"
 services:
   traefik:
     image: traefik:latest
+
     ports:
-      - "80:80"
-      - "443:443"
-      - "1884:1884"  # Para MQTT TCP
-      - "1885:1885"  # Para MQTT TCP
-      - "8000:8000"
+      - target: 80
+        published: 80
+        protocol: tcp
+        mode: ingress
+      - target: 443
+        published: 443
+        protocol: tcp
+        mode: ingress
+      - target: 1884
+        published: 1884
+        protocol: tcp
+        mode: ingress
+      - target: 1885
+        published: 1885
+        protocol: tcp
+        mode: ingress
+      - target: 8000
+        published: 8000
+        protocol: tcp
+        mode: ingress
+
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - ${DOCKER_PATH_PERSISTENT}/traefik/acme:/letsencrypt
-      - ${DOCKER_PATH_PERSISTENT}/step-ca/certs/root_ca.crt:/etc/traefik/certs/root_ca.crt:ro 
+      - ${DOCKER_PATH_PERSISTENT}/step-ca/certs/root_ca.crt:/etc/traefik/certs/root_ca.crt:ro
+
     configs:
       - source: traefik_static_config
         target: /etc/traefik/traefik.yml
       - source: traefik_dynamic_config
         target: /etc/traefik/dynamic.yml
+
     secrets:
       - media_local_crt
       - media_local_key
+
     networks:
       - infra_net
+
     deploy:
-      replicas: 1
+      mode: replicated
+      replicas: ${TRAEFIK_REPLICAS:-1}
+
       restart_policy:
         condition: any
+        delay: 10s
+        window: 120s
+
+      update_config:
+        parallelism: 1
+        delay: 10s
+        order: stop-first
+        failure_action: rollback
+        monitor: 60s
+
+      rollback_config:
+        parallelism: 1
+        delay: 10s
+        order: stop-first
+
+      resources:
+        reservations:
+          cpus: "${TRAEFIK_RES_CPU:-0.25}"
+          memory: ${TRAEFIK_RES_MEM:-256M}
+        limits:
+          cpus: "${TRAEFIK_LIM_CPU:-1.00}"
+          memory: ${TRAEFIK_LIM_MEM:-1G}
+
+      labels:
+        - "com.centurylinklabs.watchtower.scope=swarm"
 
 networks:
   infra_net:
