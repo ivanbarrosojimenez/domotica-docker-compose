@@ -1,21 +1,83 @@
-version: "2.1"
+version: "3.8"
 
 services:
   duplicati:
     image: duplicati/duplicati:latest
-    container_name: ${DOCKER_CONTAINER_NAME_PREFIX}duplicati
     hostname: duplicati
-    restart: always
-    healthcheck:
-      test: "curl -Lk -fsS http://localhost:8200 || exit 1"
-    # Recommendation: Duplicati needs root user to get access to all files
+
     user: "${DOCKER_ROOTPUID:-0}:${DOCKER_ROOTPGID:-0}"
-    network_mode: bridge
+
     ports:
-      - 8200:8200
+      - target: 8200
+        published: 8200
+        protocol: tcp
+        mode: ingress
+
     volumes:
       - ${DOCKER_PATH_PERSISTENT}/duplicati/data:/data:rw
       - /docker/backups:/backups:rw
       - ${DOCKER_PATH_PERSISTENT}:/source:ro
+
     environment:
       - TZ=${DOCKER_TZ}
+
+    healthcheck:
+      test: ["CMD-SHELL", "curl -Lk -fsS http://localhost:8200 || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+    networks:
+      - infra_net
+
+    deploy:
+      mode: replicated
+      replicas: ${DUPLICATI_REPLICAS:-1}
+
+      restart_policy:
+        condition: any
+        delay: 10s
+        window: 120s
+
+      update_config:
+        parallelism: 1
+        delay: 10s
+        order: start-first
+        failure_action: rollback
+        monitor: 30s
+
+      rollback_config:
+        parallelism: 1
+        delay: 10s
+        order: stop-first
+
+      resources:
+        reservations:
+          cpus: "${DUPLICATI_RES_CPU:-0.25}"
+          memory: ${DUPLICATI_RES_MEM:-256M}
+        limits:
+          cpus: "${DUPLICATI_LIM_CPU:-1.00}"
+          memory: ${DUPLICATI_LIM_MEM:-1G}
+
+      labels:
+        - "com.centurylinklabs.watchtower.scope=swarm"
+
+        - "traefik.enable=true"
+        - "traefik.swarm.network=infra_net"
+
+        - "traefik.http.routers.${STACK_KEY}-http.rule=Host(`${DUPLICATI_HOST}`)"
+        - "traefik.http.routers.${STACK_KEY}-http.entrypoints=http"
+        - "traefik.http.routers.${STACK_KEY}-http.middlewares=redirect-to-https@file"
+        - "traefik.http.routers.${STACK_KEY}-http.service=noop@internal"
+
+        - "traefik.http.routers.${STACK_KEY}-https.rule=Host(`${DUPLICATI_HOST}`)"
+        - "traefik.http.routers.${STACK_KEY}-https.entrypoints=https"
+        - "traefik.http.routers.${STACK_KEY}-https.tls.certresolver=step"
+        - "traefik.http.routers.${STACK_KEY}-https.service=${STACK_KEY}-svc"
+
+        - "traefik.http.services.${STACK_KEY}-svc.loadbalancer.server.port=8200"
+
+networks:
+  infra_net:
+    external: true
