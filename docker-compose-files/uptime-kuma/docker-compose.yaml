@@ -26,13 +26,15 @@ services:
     networks:
       - infra_net
       
-    placement:
-      constraints:
-        - node.hostname == ${NODE_HOSTNAME}  
+
     deploy:
       mode: replicated
       replicas: ${UPTIME_KUMA_REPLICAS}
 
+      placement:
+        constraints:
+          - node.hostname == ${NODE_HOSTNAME}
+          
       restart_policy:
         condition: any
         delay: 10s
