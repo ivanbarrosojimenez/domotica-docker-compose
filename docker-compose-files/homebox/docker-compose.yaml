@@ -38,11 +38,11 @@ services:
 
       resources:
         reservations:
-          cpus: "0.5"
-          memory: 128M
+          cpus: "${HOMEBOX_RES_CPU:-0.50}"
+          memory: ${HOMEBOX_RES_MEM:-128M}
         limits:
-          cpus: "1"
-          memory: 512M
+          cpus: "${HOMEBOX_LIM_CPU:-1.00}"
+          memory: ${HOMEBOX_LIM_MEM:-512M}
 
       labels:
         - "traefik.enable=true"
