@@ -18,7 +18,6 @@ services:
 
         - traefik.http.routers.${STACK_KEY}-http.rule=Host(`${HOMER_HOST}`)
         - traefik.http.routers.${STACK_KEY}-http.entrypoints=http
-        - traefik.http.routers.${STACK_KEY}-http.middlewares=redirect-to-https
         - traefik.http.routers.${STACK_KEY}-http.middlewares=redirect-to-https@file
         - traefik.http.routers.${STACK_KEY}-http.service=noop@internal
 
