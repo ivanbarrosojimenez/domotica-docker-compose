@@ -17,54 +17,34 @@ services:
       - type: bind
         source: ${DOCKER_PATH_PERSISTENT}/homebox
         target: /data
+
     ports:
       - target: 7745
         published: ${DOCKER_PORT_HOMEBOX}
         protocol: tcp
         mode: ingress
-        
-    healthcheck:
-      test: ["CMD-SHELL", "curl -fsS http://localhost:7745/ || exit 1"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 60s
 
     networks:
       - infra_net
 
     deploy:
       mode: replicated
-      replicas: ${HOMEBOX_REPLICAS:-1}
+      replicas: 1
 
       restart_policy:
-        condition: any
-        delay: 10s
-        window: 120s
-
-      update_config:
-        parallelism: 1
-        delay: 10s
-        order: start-first
-        failure_action: rollback
-        monitor: 30s
-
-      rollback_config:
-        parallelism: 1
-        delay: 10s
-        order: stop-first
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
 
       resources:
         reservations:
-          cpus: "${HOMEBOX_RES_CPU:-0.10}"
-          memory: ${HOMEBOX_RES_MEM:-128M}
+          cpus: "0.5"
+          memory: 128M
         limits:
-          cpus: "${HOMEBOX_LIM_CPU:-0.50}"
-          memory: ${HOMEBOX_LIM_MEM:-512M}
+          cpus: "1"
+          memory: 512M
 
       labels:
-        - "com.centurylinklabs.watchtower.scope=swarm"
-
         - "traefik.enable=true"
         - "traefik.swarm.network=infra_net"
 
