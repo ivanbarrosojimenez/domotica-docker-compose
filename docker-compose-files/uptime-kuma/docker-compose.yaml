@@ -4,7 +4,7 @@ services:
   uptime-kuma:
     image: louislam/uptime-kuma:latest
 
-        environment:
+    environment:
       - PUID=${DOCKER_ROOTPUID}
       - PGID=${DOCKER_ROOTPGID}
       - TZ=${DOCKER_TZ}
