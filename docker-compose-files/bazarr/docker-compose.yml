@@ -44,6 +44,13 @@ services:
         - "traefik.http.routers.${STACK_KEY}-https.service=${STACK_KEY}-svc"
       
         - "traefik.http.services.${STACK_KEY}-svc.loadbalancer.server.port=6767"
+      resources:
+        reservations:
+          cpus: "${BAZARR_RES_CPU}"
+          memory: ${BAZARR_RES_MEM}
+        limits:
+          cpus: "${BAZARR_LIM_CPU}"
+          memory: ${BAZARR_LIM_MEM}        
     healthcheck:
       test: ["CMD-SHELL", "curl -fsS http://localhost:6767 || exit 1"]
       interval: 30s
