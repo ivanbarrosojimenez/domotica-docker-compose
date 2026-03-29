@@ -3,15 +3,77 @@ version: "3.8"
 services:
   baikal:
     image: ckulka/baikal
+
     ports:
       - "${DOCKER_BAIKAL_PORT:-8800}:80"
+
     environment:
-      - TZ=${TZ:-Europe/Madrid}
+      - TZ=${DOCKER_TZ}
+
     volumes:
       - ${DOCKER_PATH_PERSISTENT}/baikal/config:/var/www/baikal/Specific
       - ${DOCKER_PATH_PERSISTENT}/baikal/data:/var/www/baikal/baikal-data
+
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost/ || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
     networks:
       - infra_net
+
+    deploy:
+      mode: replicated
+      replicas: ${BAIKAL_REPLICAS}
+
+      placement:
+        constraints:
+          - node.hostname == ${NODE_HOSTNAME}
+
+      restart_policy:
+        condition: any
+        delay: 10s
+        window: 120s
+
+      update_config:
+        parallelism: 1
+        delay: 10s
+        order: start-first
+        failure_action: rollback
+        monitor: 30s
+
+      rollback_config:
+        parallelism: 1
+        delay: 10s
+        order: stop-first
+
+      resources:
+        reservations:
+          cpus: "${BAIKAL_RES_CPU}"
+          memory: ${BAIKAL_RES_MEM}
+        limits:
+          cpus: "${BAIKAL_LIM_CPU}"
+          memory: ${BAIKAL_LIM_MEM}
+
+      labels:
+        - "com.centurylinklabs.watchtower.scope=swarm"
+
+        - "traefik.enable=true"
+        - "traefik.swarm.network=infra_net"
+
+        - "traefik.http.routers.${STACK_KEY}-http.rule=Host(`${BAIKAL_HOST}`)"
+        - "traefik.http.routers.${STACK_KEY}-http.entrypoints=http"
+        - "traefik.http.routers.${STACK_KEY}-http.middlewares=redirect-to-https@file"
+        - "traefik.http.routers.${STACK_KEY}-http.service=noop@internal"
+
+        - "traefik.http.routers.${STACK_KEY}-https.rule=Host(`${BAIKAL_HOST}`)"
+        - "traefik.http.routers.${STACK_KEY}-https.entrypoints=https"
+        - "traefik.http.routers.${STACK_KEY}-https.tls.certresolver=step"
+        - "traefik.http.routers.${STACK_KEY}-https.service=${STACK_KEY}-svc"
+
+        - "traefik.http.services.${STACK_KEY}-svc.loadbalancer.server.port=80"
 
 networks:
   infra_net:
