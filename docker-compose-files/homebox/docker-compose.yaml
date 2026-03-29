@@ -3,6 +3,7 @@ version: "3.8"
 services:
   homebox:
     image: ghcr.io/hay-kot/homebox:latest
+
     environment:
       HBOX_LOG_LEVEL: info
       HBOX_DB_TYPE: sqlite
@@ -11,38 +12,69 @@ services:
       PUID: "${DOCKER_ROOTPUID}"
       PGID: "${DOCKER_ROOTPGID}"
       TZ: "${DOCKER_TZ}"
+
     volumes:
       - type: bind
         source: ${DOCKER_PATH_PERSISTENT}/homebox
         target: /data
+
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:7745/ || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
     networks:
       - infra_net
+
     deploy:
       mode: replicated
-      replicas: 1
+      replicas: ${HOMEBOX_REPLICAS:-1}
+
       restart_policy:
-        condition: on-failure
-        delay: 5s
-        max_attempts: 3
+        condition: any
+        delay: 10s
+        window: 120s
+
+      update_config:
+        parallelism: 1
+        delay: 10s
+        order: start-first
+        failure_action: rollback
+        monitor: 30s
+
+      rollback_config:
+        parallelism: 1
+        delay: 10s
+        order: stop-first
+
       resources:
         reservations:
-          cpus: "0.10"
-          memory: 128M
+          cpus: "${HOMEBOX_RES_CPU:-0.10}"
+          memory: ${HOMEBOX_RES_MEM:-128M}
         limits:
-          cpus: "0.50"
-          memory: 512M
+          cpus: "${HOMEBOX_LIM_CPU:-0.50}"
+          memory: ${HOMEBOX_LIM_MEM:-512M}
+
       labels:
+        - "com.centurylinklabs.watchtower.scope=swarm"
+
         - "traefik.enable=true"
-        - "traefik.docker.network=infra_net"
-        - "traefik.http.routers.homebox.rule=Host(`homebox.media.local`)"
-        - "traefik.http.routers.homebox.entrypoints=https"
-        - "traefik.http.services.homebox.loadbalancer.server.port=7745"
-        - "traefik.http.routers.homebox.tls=true"
-        - "traefik.http.routers.homebox.tls.certresolver=stepca"
-        - "traefik.http.routers.homebox.service=homebox"
+        - "traefik.swarm.network=infra_net"
+
+        - "traefik.http.routers.${STACK_KEY}-http.rule=Host(`${HOMEBOX_HOST}`)"
+        - "traefik.http.routers.${STACK_KEY}-http.entrypoints=http"
+        - "traefik.http.routers.${STACK_KEY}-http.middlewares=redirect-to-https@file"
+        - "traefik.http.routers.${STACK_KEY}-http.service=noop@internal"
+
+        - "traefik.http.routers.${STACK_KEY}-https.rule=Host(`${HOMEBOX_HOST}`)"
+        - "traefik.http.routers.${STACK_KEY}-https.entrypoints=https"
+        - "traefik.http.routers.${STACK_KEY}-https.tls.certresolver=step"
+        - "traefik.http.routers.${STACK_KEY}-https.service=${STACK_KEY}-svc"
+
+        - "traefik.http.services.${STACK_KEY}-svc.loadbalancer.server.port=7745"
 
 networks:
   infra_net:
     external: true
-
-
