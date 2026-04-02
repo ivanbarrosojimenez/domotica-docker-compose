@@ -10,7 +10,7 @@ services:
     volumes:
       - ${DOCKER_PATH_PERSISTENT}/radarr:/config
       - ${DOCKER_PATH_MEDIA}/Peliculas:/movies
-      - ${DOCKER_PATH_MEDIA}/Descargas/Peliculas:/downloads
+      - ${DOCKER_PATH_MEDIA}/Descargas/Series:/downloads
     ports:
       - 7878:7878
     networks:
