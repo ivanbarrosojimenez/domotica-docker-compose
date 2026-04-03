@@ -30,7 +30,8 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - ${DOCKER_PATH_PERSISTENT}/traefik/acme:/letsencrypt
       - ${DOCKER_PATH_PERSISTENT}/step-ca/certs/root_ca.crt:/etc/traefik/certs/root_ca.crt:ro
-
+      - ${DOCKER_PATH_PERSISTENT}/traefik/traefik.yml:/etc/traefik/traefik.yml:ro
+      - ${DOCKER_PATH_PERSISTENT}/traefik/dynamic.yml:/etc/traefik/dynamic.yml:ro
     configs:
       - source: traefik_static_config
         target: /etc/traefik/traefik.yml
@@ -80,11 +81,11 @@ networks:
   infra_net:
     external: true
 
-configs:
-  traefik_static_config:
-    external: true
-  traefik_dynamic_config:
-    external: true
+#configs:
+#  traefik_static_config:
+#    external: true
+#  traefik_dynamic_config:
+#    external: true
 
 secrets:
   media_local_crt:
