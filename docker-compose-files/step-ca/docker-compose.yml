@@ -1,0 +1,72 @@
+version: "3.9"
+
+services:
+  step-ca:
+    image: smallstep/step-ca:latest
+
+    environment:
+      TZ: ${DOCKER_TZ}
+      DOCKER_ROOTPUID: ${DOCKER_ROOTPUID}
+      DOCKER_ROOTPGID: ${DOCKER_ROOTPGID}
+
+    dns:
+      - 10.2.0.3
+      - 1.1.1.1
+
+    ports:
+      - target: 9000
+        published: 9000
+        protocol: tcp
+        mode: host
+
+    volumes:
+      - ${DOCKER_PATH_PERSISTENT}/step-ca/config:/home/step/config
+      - ${DOCKER_PATH_PERSISTENT}/step-ca/data:/home/step/data
+      - ${DOCKER_PATH_PERSISTENT}/step-ca/certs:/home/step/certs
+      - ${DOCKER_PATH_PERSISTENT}/step-ca/secrets:/home/step/secrets
+      - ${DOCKER_PATH_PERSISTENT}/step-ca/db:/home/step/db
+
+    command: step-ca --password-file /home/step/secrets/password.txt /home/step/config/ca.json
+
+    networks:
+      - infra_net
+
+    healthcheck:
+      test: ["CMD", "wget", "--no-check-certificate", "--spider", "https://127.0.0.1:9000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+    deploy:
+      mode: replicated
+      replicas: 1
+
+      restart_policy:
+        condition: any
+        delay: 10s
+        window: 120s
+
+      update_config:
+        parallelism: 1
+        delay: 10s
+        order: stop-first
+        failure_action: rollback
+        monitor: 30s
+
+      rollback_config:
+        parallelism: 1
+        delay: 10s
+        order: stop-first
+
+      resources:
+        reservations:
+          cpus: "${STEP_CA_RES_CPU}"
+          memory: ${STEP_CA_RES_MEM}
+        limits:
+          cpus: "${STEP_CA_LIM_CPU}"
+          memory: ${STEP_CA_LIM_MEM}
+
+networks:
+  infra_net:
+    external: true
