@@ -56,6 +56,8 @@ services:
 
         - traefik.http.services.${STACK_KEY}-svc.loadbalancer.server.port=8080
 
+        - com.centurylinklabs.watchtower.scope=swarm
+
 networks:
   infra_net:
     external: true
