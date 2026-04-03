@@ -12,6 +12,34 @@ services:
       placement:
         constraints:
           - node.hostname == ${NODE_HOSTNAME}
+
+      mode: replicated
+
+      restart_policy:
+        condition: any
+        delay: 10s
+        window: 120s
+
+      update_config:
+        parallelism: 1
+        delay: 10s
+        order: stop-first
+        failure_action: rollback
+        monitor: 30s
+
+      rollback_config:
+        parallelism: 1
+        delay: 10s
+        order: stop-first
+
+      resources:
+        reservations:
+          cpus: "${HOMER_RES_CPU}"
+          memory: ${HOMER_RES_MEM}
+        limits:
+          cpus: "${HOMER_LIM_CPU}"
+          memory: ${HOMER_LIM_MEM}
+          
       labels:
         - traefik.enable=true
         - traefik.swarm.network=infra_net
