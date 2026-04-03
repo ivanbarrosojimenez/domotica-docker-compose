@@ -3,9 +3,13 @@ version: "3.8"
 services:
   jellyfin:
     image: jellyfin/jellyfin:latest
-    container_name: jellyfin
+    
     ports:
-      - "8096:8096"  # Acceso web (sin HTTPS)
+      - target: 8096
+        published: 8096
+        protocol: tcp
+        mode: ingress
+        
     volumes:
       - ${DOCKER_PATH_PERSISTENT}/jellyfin/config:/config
       - ${DOCKER_PATH_MEDIA}/Peliculas:/media/movies
@@ -16,7 +20,60 @@ services:
       - TZ=Europe/Madrid
     networks:
       - infra_net
-    restart: unless-stopped
+
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:8096/health >/dev/null || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+      
+    deploy:
+      mode: replicated
+      replicas: 1
+
+      restart_policy:
+        condition: any
+        delay: 10s
+        window: 120s
+
+      update_config:
+        parallelism: 1
+        delay: 10s
+        order: start-first
+        failure_action: rollback
+        monitor: 30s
+
+      rollback_config:
+        parallelism: 1
+        delay: 10s
+        order: stop-first
+
+      resources:
+        reservations:
+          cpus: "${JELLYFIN_RES_CPU}"
+          memory: ${JELLYFIN_RES_MEM}
+        limits:
+          cpus: "${JELLYFIN_LIM_CPU}"
+          memory: ${JELLYFIN_LIM_MEM}
+
+      labels:
+        - "com.centurylinklabs.watchtower.scope=swarm"
+
+        - "traefik.enable=true"
+        - "traefik.swarm.network=infra_net"
+
+        - "traefik.http.routers.${STACK_KEY}-http.rule=Host(`${JELLYFIN_HOST}`)"
+        - "traefik.http.routers.${STACK_KEY}-http.entrypoints=http"
+        - "traefik.http.routers.${STACK_KEY}-http.middlewares=redirect-to-https@file"
+        - "traefik.http.routers.${STACK_KEY}-http.service=noop@internal"
+
+        - "traefik.http.routers.${STACK_KEY}-https.rule=Host(`${JELLYFIN_HOST}`)"
+        - "traefik.http.routers.${STACK_KEY}-https.entrypoints=https"
+        - "traefik.http.routers.${STACK_KEY}-https.tls.certresolver=step"
+        - "traefik.http.routers.${STACK_KEY}-https.service=${STACK_KEY}-svc"
+
+        - "traefik.http.services.${STACK_KEY}-svc.loadbalancer.server.port=8096"
 
 networks:
   infra_net:
