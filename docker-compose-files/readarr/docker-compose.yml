@@ -2,7 +2,7 @@ version: "3.8"
 
 services:
   readarr:
-    image: lscr.io/linuxserver/readarr:develop
+    image: lscr.io/linuxserver/readarr:latest
     environment:
       - PUID=${DOCKER_ROOTPUID:-1000}
       - PGID=${DOCKER_ROOTPGID:-1000}
