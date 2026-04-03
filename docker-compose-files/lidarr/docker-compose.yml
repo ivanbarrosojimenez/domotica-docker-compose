@@ -3,26 +3,83 @@ version: "3.8"
 services:
   lidarr:
     image: lscr.io/linuxserver/lidarr:latest
+
     environment:
       - PUID=${DOCKER_ROOTPUID:-1000}
       - PGID=${DOCKER_ROOTPGID:-1000}
       - TZ=${TZ:-Europe/Madrid}
+
     volumes:
       - ${DOCKER_PATH_PERSISTENT}/lidarr:/config
       - ${DOCKER_PATH_MEDIA}/Musica:/music
       - ${DOCKER_PATH_MEDIA}/Descargas/Series:/downloads
+
     ports:
-      - 8686:8686
+      - target: 8686
+        published: 8686
+        protocol: tcp
+        mode: ingress
+
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:8686 >/dev/null || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
     networks:
       - infra_net
+
     deploy:
       mode: replicated
       replicas: 1
+
       placement:
         constraints:
           - node.role == manager
+
       restart_policy:
         condition: any
+        delay: 10s
+        window: 120s
+
+      update_config:
+        parallelism: 1
+        delay: 10s
+        order: stop-first
+        failure_action: rollback
+        monitor: 30s
+
+      rollback_config:
+        parallelism: 1
+        delay: 10s
+        order: stop-first
+
+      resources:
+        reservations:
+          cpus: "${LIDARR_RES_CPU}"
+          memory: ${LIDARR_RES_MEM}
+        limits:
+          cpus: "${LIDARR_LIM_CPU}"
+          memory: ${LIDARR_LIM_MEM}
+
+      labels:
+        - "com.centurylinklabs.watchtower.scope=swarm"
+
+        - "traefik.enable=true"
+        - "traefik.swarm.network=infra_net"
+
+        - "traefik.http.routers.${STACK_KEY}-http.rule=Host(`${LIDARR_HOST}`)"
+        - "traefik.http.routers.${STACK_KEY}-http.entrypoints=http"
+        - "traefik.http.routers.${STACK_KEY}-http.middlewares=redirect-to-https@file"
+        - "traefik.http.routers.${STACK_KEY}-http.service=noop@internal"
+
+        - "traefik.http.routers.${STACK_KEY}-https.rule=Host(`${LIDARR_HOST}`)"
+        - "traefik.http.routers.${STACK_KEY}-https.entrypoints=https"
+        - "traefik.http.routers.${STACK_KEY}-https.tls.certresolver=step"
+        - "traefik.http.routers.${STACK_KEY}-https.service=${STACK_KEY}-svc"
+
+        - "traefik.http.services.${STACK_KEY}-svc.loadbalancer.server.port=8686"
 
 networks:
   infra_net:
