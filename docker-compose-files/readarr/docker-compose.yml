@@ -1,0 +1,29 @@
+version: "3.8"
+
+services:
+  readarr:
+    image: lscr.io/linuxserver/readarr:develop
+    environment:
+      - PUID=${DOCKER_ROOTPUID:-1000}
+      - PGID=${DOCKER_ROOTPGID:-1000}
+      - TZ=${TZ:-Europe/Madrid}
+    volumes:
+      - ${DOCKER_PATH_PERSISTENT}/readarr:/config
+      - ${DOCKER_PATH_MEDIA}/Libros:/books
+      - ${DOCKER_PATH_MEDIA}/Descargas/Series:/downloads
+    ports:
+      - 8787:8787
+    networks:
+      - infra_net
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      restart_policy:
+        condition: any
+
+networks:
+  infra_net:
+    external: true
