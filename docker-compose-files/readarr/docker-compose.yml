@@ -2,7 +2,7 @@ version: "3.8"
 
 services:
   readarr:
-    image: ghcr.io/linuxserver/readarr:amd64-develop
+    image: lscr.io/linuxserver/readarr:develop
     environment:
       - PUID=${DOCKER_ROOTPUID:-1000}
       - PGID=${DOCKER_ROOTPGID:-1000}
