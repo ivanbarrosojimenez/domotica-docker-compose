@@ -13,10 +13,10 @@ services:
       
     healthcheck:
       test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:8191/ >/dev/null || exit 1"]
-      interval: 60s
+      interval: 30s
       timeout: 20s
       retries: 5
-      start_period: 120s
+      start_period: 10s
       
     ports:
       - 8191:8191
