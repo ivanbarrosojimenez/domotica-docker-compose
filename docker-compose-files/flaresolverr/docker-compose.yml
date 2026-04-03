@@ -56,7 +56,7 @@ services:
     dns:
       - 1.1.1.1
       - 8.8.8.8
-    shm_size: "2gb"
+    shm_size: "1gb"
 networks:
   infra_net:
     external: true
