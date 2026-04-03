@@ -4,7 +4,7 @@ services:
   flaresolverr:
     image: ghcr.io/flaresolverr/flaresolverr:latest
     environment:
-      - LOG_LEVEL=info
+      - LOG_LEVEL=debug
       - LOG_HTML=false
       - CAPTCHA_SOLVER=none
       - TZ=${TZ:-Europe/Madrid}
@@ -20,7 +20,10 @@ services:
           - node.role == manager
       restart_policy:
         condition: any
-
+    dns:
+      - 1.1.1.1
+      - 8.8.8.8
+    shm_size: "2gb"
 networks:
   infra_net:
     external: true
