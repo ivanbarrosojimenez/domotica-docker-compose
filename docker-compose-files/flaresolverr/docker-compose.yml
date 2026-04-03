@@ -2,7 +2,7 @@ version: "3.8"
 
 services:
   flaresolverr:
-    image: ghcr.io/flaresolverr/flaresolverr:3.3.5
+    image: ghcr.io/flaresolverr/flaresolverr:v3.3.25
     environment:
       - LOG_LEVEL=debug
       - LOG_HTML=false
