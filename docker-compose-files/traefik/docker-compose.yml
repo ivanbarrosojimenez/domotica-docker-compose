@@ -32,11 +32,11 @@ services:
       - ${DOCKER_PATH_PERSISTENT}/step-ca/certs/root_ca.crt:/etc/traefik/certs/root_ca.crt:ro
       - ${DOCKER_PATH_PERSISTENT}/traefik/traefik.yml:/etc/traefik/traefik.yml:ro
       - ${DOCKER_PATH_PERSISTENT}/traefik/dynamic.yml:/etc/traefik/dynamic.yml:ro
-    configs:
-      - source: traefik_static_config
-        target: /etc/traefik/traefik.yml
-      - source: traefik_dynamic_config
-        target: /etc/traefik/dynamic.yml
+   # configs:
+   #   - source: traefik_static_config
+   #     target: /etc/traefik/traefik.yml
+   #   - source: traefik_dynamic_config
+   #     target: /etc/traefik/dynamic.yml
 
     secrets:
       - media_local_crt
