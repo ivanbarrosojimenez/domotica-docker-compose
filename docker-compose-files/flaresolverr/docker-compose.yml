@@ -8,6 +8,7 @@ services:
       - LOG_HTML=false
       - CAPTCHA_SOLVER=none
       - TZ=${TZ:-Europe/Madrid}
+      - HEADLESS=false
     ports:
       - 8191:8191
     networks:
