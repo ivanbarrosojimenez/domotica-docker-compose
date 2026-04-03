@@ -36,9 +36,9 @@ services:
         condition: any
       resources:
         limits:
-          memory: 1G
+          memory: 2G
         reservations:
-          memory: 256M
+          memory: 1024M
 
 networks:
   infra_net:
