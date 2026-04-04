@@ -1,0 +1,216 @@
+version: "3.9"
+
+services:
+  n8n-postgres:
+    image: postgres:17.9-alpine
+    hostname: n8n-postgres
+
+    volumes:
+      - ${DOCKER_PATH_PERSISTENT}/n8n/postgres:/var/lib/postgresql/data
+
+    environment:
+      - TZ=${DOCKER_TZ}
+      - POSTGRES_DB=${N8N_POSTGRES_DB:-n8n}
+      - POSTGRES_USER=${N8N_POSTGRES_USER:-n8n}
+      - POSTGRES_PASSWORD=${N8N_POSTGRES_PASSWORD}
+      - PGDATA=/var/lib/postgresql/data/pgdata
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${N8N_POSTGRES_USER:-n8n} -d ${N8N_POSTGRES_DB:-n8n} || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 20s
+
+    deploy:
+      mode: replicated
+      replicas: 1
+
+      placement:
+        constraints:
+          - node.role == manager
+
+      restart_policy:
+        condition: any
+        delay: 10s
+        window: 120s
+
+      update_config:
+        parallelism: 1
+        delay: 10s
+        order: stop-first
+        failure_action: rollback
+        monitor: 30s
+
+      rollback_config:
+        parallelism: 1
+        delay: 10s
+        order: stop-first
+
+      resources:
+        reservations:
+          cpus: "${POSTGRES_RES_CPU:-0.25}"
+          memory: ${POSTGRES_RES_MEM:-256M}
+        limits:
+          cpus: "${POSTGRES_LIM_CPU:-1.00}"
+          memory: ${POSTGRES_LIM_MEM:-1G}
+
+    networks:
+      - n8n_backend
+
+  n8n:
+    image: n8nio/n8n:1.123.28
+    hostname: n8n
+
+    ports:
+      - target: ${N8N_INTERNAL_PORT:-5678}
+        published: ${N8N_EXTERNAL_PORT:-5678}
+        protocol: tcp
+        mode: ingress
+
+    volumes:
+      - ${DOCKER_PATH_PERSISTENT}/n8n/data:/home/node/.n8n
+
+    environment:
+      - TZ=${DOCKER_TZ}
+
+      # Base de datos
+      - DB_TYPE=postgresdb
+      - DB_POSTGRESDB_HOST=n8n-postgres
+      - DB_POSTGRESDB_PORT=5432
+      - DB_POSTGRESDB_DATABASE=${N8N_POSTGRES_DB:-n8n}
+      - DB_POSTGRESDB_USER=${N8N_POSTGRES_USER:-n8n}
+      - DB_POSTGRESDB_PASSWORD=${N8N_POSTGRES_PASSWORD}
+
+      # n8n / reverse proxy
+      - N8N_HOST=${N8N_HOST}
+      - N8N_PORT=${N8N_INTERNAL_PORT:-5678}
+      - N8N_PROTOCOL=https
+      - N8N_EDITOR_BASE_URL=https://${N8N_HOST}
+      - WEBHOOK_URL=${N8N_WEBHOOK_URL}
+      - N8N_PROXY_HOPS=1
+
+      # seguridad / persistencia de credenciales
+      - N8N_ENCRYPTION_KEY=${N8N_ENCRYPTION_KEY}
+
+      # opcional, para reducir telemetría
+      - N8N_DIAGNOSTICS_ENABLED=false
+
+    deploy:
+      mode: replicated
+      replicas: 1
+
+      placement:
+        constraints:
+          - node.role == manager
+
+      restart_policy:
+        condition: any
+        delay: 10s
+        window: 120s
+
+      update_config:
+        parallelism: 1
+        delay: 10s
+        order: start-first
+        failure_action: rollback
+        monitor: 30s
+
+      rollback_config:
+        parallelism: 1
+        delay: 10s
+        order: stop-first
+
+      resources:
+        reservations:
+          cpus: "${N8N_RES_CPU:-0.50}"
+          memory: ${N8N_RES_MEM:-512M}
+        limits:
+          cpus: "${N8N_LIM_CPU:-2.00}"
+          memory: ${N8N_LIM_MEM:-2G}
+
+      labels:
+        - "traefik.enable=true"
+        - "traefik.swarm.network=infra_net"
+
+        - "traefik.http.routers.${STACK_KEY}-n8n-http.rule=Host(`${N8N_HOST}`)"
+        - "traefik.http.routers.${STACK_KEY}-n8n-http.entrypoints=http"
+        - "traefik.http.routers.${STACK_KEY}-n8n-http.middlewares=redirect-to-https@file"
+        - "traefik.http.routers.${STACK_KEY}-n8n-http.service=noop@internal"
+
+        - "traefik.http.routers.${STACK_KEY}-n8n-https.rule=Host(`${N8N_HOST}`)"
+        - "traefik.http.routers.${STACK_KEY}-n8n-https.entrypoints=https"
+        - "traefik.http.routers.${STACK_KEY}-n8n-https.tls.certresolver=step"
+        - "traefik.http.routers.${STACK_KEY}-n8n-https.service=${STACK_KEY}-n8n-svc"
+
+        - "traefik.http.services.${STACK_KEY}-n8n-svc.loadbalancer.server.port=${N8N_INTERNAL_PORT:-5678}"
+
+    networks:
+      - infra_net
+      - n8n_backend
+
+  diun:
+    image: ghcr.io/crazy-max/diun:4.31
+    hostname: diun
+    command: serve
+
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ${DOCKER_PATH_PERSISTENT}/diun:/data
+
+    environment:
+      TZ: ${DOCKER_TZ}
+      LOG_LEVEL: info
+      LOG_JSON: "false"
+      DIUN_DB_PATH: /data/diun.db
+      DIUN_WATCH_WORKERS: ${DIUN_WATCH_WORKERS:-20}
+      DIUN_WATCH_SCHEDULE: ${DIUN_WATCH_SCHEDULE:-0 */6 * * *}
+      DIUN_WATCH_JITTER: ${DIUN_WATCH_JITTER:-30s}
+      DIUN_WATCH_RUNONSTARTUP: "true"
+      DIUN_WATCH_FIRSTCHECKNOTIF: "false"
+      DIUN_PROVIDERS_SWARM: "true"
+      DIUN_PROVIDERS_SWARM_WATCHBYDEFAULT: "true"
+      DIUN_NOTIF_TELEGRAM_TOKEN: ${DIUN_TELEGRAM_TOKEN}
+      DIUN_NOTIF_TELEGRAM_CHATIDS: ${DIUN_TELEGRAM_CHATIDS}
+      DIUN_NOTIF_TELEGRAM_TEMPLATEBODY: 'Docker tag {{ if .Entry.Image.HubLink }}[{{ .Entry.Image }}]({{ .Entry.Image.HubLink }}){{ else }}{{ .Entry.Image }}{{ end }} which you subscribed to through {{ .Entry.Provider }} provider has been {{ if (eq .Entry.Status "new") }}newly added{{ else }}updated{{ end }} on {{ escapeMarkdown .Meta.Hostname }}.'      
+    
+    deploy:
+      mode: replicated
+      replicas: 1
+
+      placement:
+        constraints:
+          - node.role == manager
+
+      restart_policy:
+        condition: any
+        delay: 10s
+        window: 120s
+
+      update_config:
+        parallelism: 1
+        delay: 10s
+        order: stop-first
+        failure_action: rollback
+        monitor: 30s
+
+      rollback_config:
+        parallelism: 1
+        delay: 10s
+        order: stop-first
+
+      resources:
+        reservations:
+          cpus: "${DIUN_RES_CPU:-0.10}"
+          memory: ${DIUN_RES_MEM:-128M}
+        limits:
+          cpus: "${DIUN_LIM_CPU:-0.50}"
+          memory: ${DIUN_LIM_MEM:-256M}
+
+networks:
+  infra_net:
+    external: true
+
+  n8n_backend:
+    driver: overlay
+    attachable: true
