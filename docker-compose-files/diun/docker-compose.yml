@@ -74,6 +74,8 @@ services:
     environment:
       - TZ=${DOCKER_TZ}
 
+      - N8N_USER_FOLDER=/home/node/.n8n
+
       # Base de datos
       - DB_TYPE=postgresdb
       - DB_POSTGRESDB_HOST=n8n-postgres
