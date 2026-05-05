@@ -13,16 +13,8 @@ services:
         published: 443
         protocol: tcp
         mode: ingress
-      - target: 1884
-        published: 1884
-        protocol: tcp
-        mode: ingress
-      - target: 1885
-        published: 1885
-        protocol: tcp
-        mode: ingress
-      - target: 8000
-        published: 8000
+      - target: 8080
+        published: 8088
         protocol: tcp
         mode: ingress
 
