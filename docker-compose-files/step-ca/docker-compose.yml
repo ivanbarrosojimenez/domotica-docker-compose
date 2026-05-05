@@ -10,12 +10,12 @@ services:
       DOCKER_ROOTPGID: ${DOCKER_ROOTPGID}
 
     dns:
-      - 10.2.0.3
-      - 1.1.1.1
+      - ${DNS_PRIMARY}
+      - ${DNS_SECONDARY:-1.1.1.1}
 
     ports:
       - target: 9000
-        published: 9000
+        published: ${STEP_CA_PORT:-9000}
         protocol: tcp
         mode: host
 
@@ -70,3 +70,4 @@ services:
 networks:
   infra_net:
     external: true
+    name: ${DOCKER_NETWORK:-infra_net}
