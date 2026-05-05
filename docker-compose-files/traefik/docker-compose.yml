@@ -36,7 +36,12 @@ services:
 
     networks:
       - infra_net
-
+      
+    dns:
+      - ${DNS_PRIMARY}
+      - ${DNS_SECONDARY:-1.1.1.1}
+    extra_hosts:
+      - "${TRAEFIK_STEP_CA_HOST}:${TRAEFIK_STEP_CA_IP}"
     deploy:
       mode: replicated
       replicas: ${TRAEFIK_REPLICAS:-1}
