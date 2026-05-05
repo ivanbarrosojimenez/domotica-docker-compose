@@ -4,8 +4,6 @@ services:
     image: koenkk/zigbee2mqtt:latest
     container_name: zigbee2mqtt-local
     environment:
-      - PUID=1
-      - PGID=1
       - TZ=${DOCKER_TZ}
       - MQTT_HOST=${MQTT_HOST}
       - MQTT_PORT=${MQTT_PORT:-1883}
@@ -20,7 +18,7 @@ services:
       # Make sure this matched your adapter location
       #- /dev/serial/by-id/usb-Silicon_Labs_Sonoff_Zigbee_3.0_USB_Dongle_Plus_0001-if00:/dev/ttyUSB0
       - ${DOCKER_DONGLE:-/dev/ttyUSB0}:/dev/ttyUSB0
-    user: 0:0
+    user: "${DOCKER_ROOTPUID:-1000}:${DOCKER_ROOTPGID:-1000}"
     healthcheck:
       #test: "nc -w3 $${MQTT_HOST} $${MQTT_PORT} < /dev/null || exit 1"
       #test: ["CMD-SHELL", "sh -c 'nc -w3 $${MQTT_HOST} $${MQTT_PORT} < /dev/null >/dev/null 2>&1 || exit 1'"]
