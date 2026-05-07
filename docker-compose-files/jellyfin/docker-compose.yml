@@ -58,6 +58,7 @@ services:
           memory: ${JELLYFIN_LIM_MEM}
 
       labels:
+      labels:
         - "com.centurylinklabs.watchtower.scope=swarm"
 
         - "traefik.enable=true"
@@ -71,7 +72,11 @@ services:
         - "traefik.http.routers.${STACK_KEY}-https.rule=Host(`${JELLYFIN_HOST}`)"
         - "traefik.http.routers.${STACK_KEY}-https.entrypoints=https"
         - "traefik.http.routers.${STACK_KEY}-https.tls.certresolver=step"
+        - "traefik.http.routers.${STACK_KEY}-https.middlewares=${STACK_KEY}-headers"
         - "traefik.http.routers.${STACK_KEY}-https.service=${STACK_KEY}-svc"
+
+        - "traefik.http.middlewares.${STACK_KEY}-headers.headers.customrequestheaders.X-Forwarded-Proto=https"
+        - "traefik.http.middlewares.${STACK_KEY}-headers.headers.customrequestheaders.X-Forwarded-Host=${JELLYFIN_HOST}"
 
         - "traefik.http.services.${STACK_KEY}-svc.loadbalancer.server.port=8096"
 
