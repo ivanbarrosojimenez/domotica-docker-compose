@@ -7,7 +7,7 @@ services:
       - TZ=${TZ:-Europe/Madrid}
       - POSTGRES_HOST=bitmagnet-postgres
       - POSTGRES_PASSWORD=${BITMAGNET_DB_PASSWORD}
-      - TMDB_API_KEY={TMDB_API}
+      - TMDB_API_KEY=${TMDB_API}
     command:
       - worker
       - run
