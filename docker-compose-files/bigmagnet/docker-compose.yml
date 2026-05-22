@@ -8,6 +8,9 @@ services:
       - POSTGRES_HOST=bitmagnet-postgres
       - POSTGRES_PASSWORD=${BITMAGNET_DB_PASSWORD}
       - TMDB_API_KEY=${TMDB_API}
+      - EXTRA_CONFIG_FILES=/config/config.yml
+    volumes:
+      - ${DOCKER_PATH_PERSISTENT}/bitmagnet/config:/config:ro
     command:
       - worker
       - run
