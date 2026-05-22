@@ -11,6 +11,7 @@ services:
       - EXTRA_CONFIG_FILES=/config/config.yml
     volumes:
       - ${DOCKER_PATH_PERSISTENT}/bitmagnet/config:/config:ro
+      - ${DOCKER_PATH_PERSISTENT}/bitmagnet/config:/root/.config/bitmagnet:ro
     command:
       - worker
       - run
