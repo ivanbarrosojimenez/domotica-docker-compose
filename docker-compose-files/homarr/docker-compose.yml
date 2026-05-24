@@ -1,0 +1,83 @@
+version: "3.8"
+
+services:
+  homarr:
+    image: ghcr.io/homarr-labs/homarr:latest
+
+    environment:
+      TZ: "${DOCKER_TZ}"
+      PUID: "${DOCKER_ROOTPUID}"
+      PGID: "${DOCKER_ROOTPGID}"
+      SECRET_ENCRYPTION_KEY: "${HOMARR_SECRET_ENCRYPTION_KEY}"
+
+    volumes:
+      - type: bind
+        source: ${DOCKER_PATH_PERSISTENT}/homarr/appdata
+        target: /appdata
+
+    ports:
+      - target: 7575
+        published: ${DOCKER_PORT_HOMARR}
+        protocol: tcp
+        mode: ingress
+
+    networks:
+      - infra_net
+
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://127.0.0.1:7575/ || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+    deploy:
+      mode: replicated
+      replicas: 1
+
+      restart_policy:
+        condition: any
+        delay: 10s
+        window: 120s
+
+      update_config:
+        parallelism: 1
+        delay: 10s
+        order: stop-first
+        failure_action: rollback
+        monitor: 30s
+
+      rollback_config:
+        parallelism: 1
+        delay: 10s
+        order: stop-first
+
+      resources:
+        reservations:
+          cpus: "${HOMARR_RES_CPU:-0.25}"
+          memory: ${HOMARR_RES_MEM:-256M}
+        limits:
+          cpus: "${HOMARR_LIM_CPU:-1.00}"
+          memory: ${HOMARR_LIM_MEM:-1G}
+
+      labels:
+        - "traefik.enable=true"
+        - "traefik.swarm.network=infra_net"
+
+        - "traefik.http.routers.${STACK_KEY}-http.rule=Host(`${HOMARR_HOST}`)"
+        - "traefik.http.routers.${STACK_KEY}-http.entrypoints=http"
+        - "traefik.http.routers.${STACK_KEY}-http.middlewares=redirect-to-https@file"
+        - "traefik.http.routers.${STACK_KEY}-http.service=noop@internal"
+
+        - "traefik.http.routers.${STACK_KEY}-https.rule=Host(`${HOMARR_HOST}`)"
+        - "traefik.http.routers.${STACK_KEY}-https.entrypoints=https"
+        - "traefik.http.routers.${STACK_KEY}-https.tls.certresolver=step"
+        - "traefik.http.routers.${STACK_KEY}-https.service=${STACK_KEY}-svc"
+
+        - "traefik.http.services.${STACK_KEY}-svc.loadbalancer.server.port=7575"
+
+        - "com.centurylinklabs.watchtower.scope=swarm"
+
+networks:
+  infra_net:
+    external: true
