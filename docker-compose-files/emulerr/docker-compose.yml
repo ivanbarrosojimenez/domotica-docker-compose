@@ -1,0 +1,127 @@
+version: "3.8"
+
+services:
+  emulerr:
+    image: isc30/emulerr:latest
+
+    environment:
+      TZ: "${DOCKER_TZ}"
+      PUID: "${DOCKER_ROOTPUID}"
+      PGID: "${DOCKER_ROOTPGID}"
+
+      PORT: "3000"
+      ED2K_PORT: "4662"
+      LOG_LEVEL: "info"
+      PASSWORD: "${EMULERR_PASSWORD}"
+
+      # Evita problemas si la carpeta complete acaba teniendo muchos archivos compartidos
+      MOD_AUTO_SHARE_ENABLED: "false"
+
+    volumes:
+      - type: bind
+        source: ${DOCKER_PATH_PERSISTENT}/emulerr/config
+        target: /config
+
+      - type: bind
+        source: ${DOCKER_PATH_PERSISTENT}/emulerr/downloads
+        target: /downloads
+
+      # Opcional: compartir contenido ya existente por eD2K/Kad
+      # - type: bind
+      #   source: /ruta/a/tu/biblioteca
+      #   target: /shared
+      #   read_only: true
+
+    ports:
+      # UI/API web. Puedes quitarlo si solo quieres acceso por Traefik.
+      - target: 3000
+        published: ${DOCKER_PORT_EMULERR}
+        protocol: tcp
+        mode: ingress
+
+      # eD2K TCP - recomendado en host para P2P
+      - target: 4662
+        published: ${DOCKER_PORT_EMULERR_ED2K_TCP:-4662}
+        protocol: tcp
+        mode: host
+
+      # eD2K UDP - recomendado en host para P2P
+      - target: 4662
+        published: ${DOCKER_PORT_EMULERR_ED2K_UDP:-4662}
+        protocol: udp
+        mode: host
+
+      # Opcional: búsqueda global eD2K UDP, puerto TCP + 3
+      - target: 4665
+        published: ${DOCKER_PORT_EMULERR_ED2K_SEARCH_UDP:-4665}
+        protocol: udp
+        mode: host
+
+    networks:
+      - infra_net
+
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "node -e \"fetch('http://127.0.0.1:3000').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))\""
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 90s
+
+    deploy:
+      mode: replicated
+      replicas: 1
+
+      placement:
+        constraints:
+          - node.role == manager
+
+      restart_policy:
+        condition: any
+        delay: 10s
+        window: 120s
+
+      update_config:
+        parallelism: 1
+        delay: 10s
+        order: stop-first
+        failure_action: rollback
+        monitor: 30s
+
+      rollback_config:
+        parallelism: 1
+        delay: 10s
+        order: stop-first
+
+      resources:
+        reservations:
+          cpus: "${EMULERR_RES_CPU:-0.25}"
+          memory: ${EMULERR_RES_MEM:-512M}
+        limits:
+          cpus: "${EMULERR_LIM_CPU:-1.50}"
+          memory: ${EMULERR_LIM_MEM:-2G}
+
+      labels:
+        - "traefik.enable=true"
+        - "traefik.swarm.network=infra_net"
+
+        - "traefik.http.routers.${STACK_KEY}-http.rule=Host(`${EMULERR_HOST}`)"
+        - "traefik.http.routers.${STACK_KEY}-http.entrypoints=http"
+        - "traefik.http.routers.${STACK_KEY}-http.middlewares=redirect-to-https@file"
+        - "traefik.http.routers.${STACK_KEY}-http.service=noop@internal"
+
+        - "traefik.http.routers.${STACK_KEY}-https.rule=Host(`${EMULERR_HOST}`)"
+        - "traefik.http.routers.${STACK_KEY}-https.entrypoints=https"
+        - "traefik.http.routers.${STACK_KEY}-https.tls.certresolver=step"
+        - "traefik.http.routers.${STACK_KEY}-https.service=${STACK_KEY}-svc"
+
+        - "traefik.http.services.${STACK_KEY}-svc.loadbalancer.server.port=3000"
+
+        - "com.centurylinklabs.watchtower.scope=swarm"
+
+networks:
+  infra_net:
+    external: true
