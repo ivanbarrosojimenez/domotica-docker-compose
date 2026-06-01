@@ -17,7 +17,7 @@ services:
       - target: 9117
         published: ${JACKETT_EXTERNAL_PORT:-9117}
         protocol: tcp
-        mode: host
+        mode: ingress
 
     networks:
       - infra_net
