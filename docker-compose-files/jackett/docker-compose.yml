@@ -3,35 +3,40 @@ version: "3.8"
 services:
   jackett:
     image: lscr.io/linuxserver/jackett
+
     environment:
       - PUID=${DOCKER_ROOTPUID:-1000}
       - PGID=${DOCKER_ROOTPGID:-1000}
-      - TZ=${TZ:-Europe/Madrid}
+      - TZ=${DOCKER_TZ}
+
     volumes:
       - ${DOCKER_PATH_PERSISTENT}/jackett:/config
       - ${DOCKER_PATH_MEDIA}/Descargas:/downloads
+
     ports:
       - target: 9117
-        published: 9117
+        published: ${JACKETT_EXTERNAL_PORT:-9117}
         protocol: tcp
         mode: host
+
     networks:
       - infra_net
-      
+
     healthcheck:
       test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:9117/UI/Dashboard >/dev/null || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 5
       start_period: 60s
-      
+
     deploy:
       mode: replicated
       replicas: 1
+
       placement:
         constraints:
-          - node.role == manager
-          
+          - node.hostname == ${NODE_HOSTNAME}
+
       restart_policy:
         condition: any
         delay: 10s
