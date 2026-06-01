@@ -31,6 +31,13 @@ services:
         protocol: udp
         mode: host
 
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:${QBITTORRENT_WEBUI_PORT:-8091} || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
     deploy:
       mode: replicated
       replicas: 1
@@ -63,6 +70,24 @@ services:
         limits:
           cpus: "${QBITTORRENT_LIM_CPU:-1.50}"
           memory: ${QBITTORRENT_LIM_MEM:-2G}
+
+      labels:
+        - "com.centurylinklabs.watchtower.scope=swarm"
+
+        - "traefik.enable=true"
+        - "traefik.swarm.network=infra_net"
+
+        - "traefik.http.routers.${STACK_KEY}-http.rule=Host(`${QBITTORRENT_HOST}`)"
+        - "traefik.http.routers.${STACK_KEY}-http.entrypoints=http"
+        - "traefik.http.routers.${STACK_KEY}-http.middlewares=redirect-to-https@file"
+        - "traefik.http.routers.${STACK_KEY}-http.service=noop@internal"
+
+        - "traefik.http.routers.${STACK_KEY}-https.rule=Host(`${QBITTORRENT_HOST}`)"
+        - "traefik.http.routers.${STACK_KEY}-https.entrypoints=https"
+        - "traefik.http.routers.${STACK_KEY}-https.tls.certresolver=step"
+        - "traefik.http.routers.${STACK_KEY}-https.service=${STACK_KEY}-svc"
+
+        - "traefik.http.services.${STACK_KEY}-svc.loadbalancer.server.port=${QBITTORRENT_WEBUI_PORT:-8091}"
 
 networks:
   infra_net:
