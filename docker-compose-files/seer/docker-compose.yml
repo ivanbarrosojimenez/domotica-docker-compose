@@ -35,6 +35,10 @@ services:
       mode: replicated
       replicas: 1
 
+      placement:
+        constraints:
+          - node.hostname == ${SEERR_NODE_HOSTNAME}
+
       restart_policy:
         condition: any
         delay: 10s
