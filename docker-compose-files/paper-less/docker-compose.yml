@@ -13,13 +13,16 @@ services:
     deploy:
       mode: replicated
       replicas: 1
+
       placement:
         constraints:
           - node.hostname == ${NODE_HOSTNAME}
+
       restart_policy:
         condition: any
         delay: 10s
         window: 120s
+
       resources:
         reservations:
           cpus: "${REDIS_RES_CPU:-0.10}"
@@ -45,13 +48,16 @@ services:
     deploy:
       mode: replicated
       replicas: 1
+
       placement:
         constraints:
           - node.hostname == ${NODE_HOSTNAME}
+
       restart_policy:
         condition: any
         delay: 10s
         window: 120s
+
       resources:
         reservations:
           cpus: "${POSTGRES_RES_CPU:-0.25}"
@@ -64,8 +70,8 @@ services:
     image: ghcr.io/paperless-ngx/paperless-ngx:latest
 
     ports:
-      - target: 8000
-        published: 8010
+      - target: ${PAPERLESS_INTERNAL_PORT:-8000}
+        published: ${PAPERLESS_EXTERNAL_PORT:-8010}
         protocol: tcp
         mode: ingress
 
@@ -79,20 +85,20 @@ services:
 
     environment:
       TZ: ${DOCKER_TZ}
-      PUID: 1
-      PGID: 1
+      PUID: ${DOCKER_ROOTPUID}
+      PGID: ${DOCKER_ROOTPGID}
       PAPERLESS_DBHOST: db
       PAPERLESS_REDIS: redis://broker:6379
       PAPERLESS_ADMIN_USER: ${PAPER_USER}
       PAPERLESS_ADMIN_PASSWORD: ${APP_KEY}
       PAPERLESS_SECRET_KEY: ${APP_KEY}
-      PAPERLESS_ALLOWED_HOSTS: paperless.media.local,localhost,127.0.0.1,192.168.1.151
-      PAPERLESS_CSRF_TRUSTED_ORIGINS: https://paperless.media.local
-      SESSION_COOKIE_SECURE: "true"
-      CSRF_COOKIE_SECURE: "true"
-      SECURE_PROXY_SSL_HEADER: HTTP_X_FORWARDED_PROTO,https
-      PAPERLESS_SCRATCH_DIR: /tmp/paperless
-      PAPERLESS_LOGLEVEL: info
+      PAPERLESS_ALLOWED_HOSTS: ${PAPERLESS_ALLOWED_HOSTS}
+      PAPERLESS_CSRF_TRUSTED_ORIGINS: ${PAPERLESS_CSRF_TRUSTED_ORIGINS}
+      SESSION_COOKIE_SECURE: "${PAPERLESS_SESSION_COOKIE_SECURE:-true}"
+      CSRF_COOKIE_SECURE: "${PAPERLESS_CSRF_COOKIE_SECURE:-true}"
+      SECURE_PROXY_SSL_HEADER: ${PAPERLESS_SECURE_PROXY_SSL_HEADER}
+      PAPERLESS_SCRATCH_DIR: ${PAPERLESS_SCRATCH_DIR:-/tmp/paperless}
+      PAPERLESS_LOGLEVEL: ${PAPERLESS_LOGLEVEL:-info}
       PAPERLESS_GMAIL_OAUTH_CLIENT_ID: ${PAPERLESS_GMAIL_OAUTH_CLIENT_ID}
       PAPERLESS_GMAIL_OAUTH_CLIENT_SECRET: ${PAPERLESS_GMAIL_OAUTH_CLIENT_SECRET}
       PAPERLESS_URL: ${PAPERLESS_URL}
@@ -137,17 +143,17 @@ services:
         - "traefik.enable=true"
         - "traefik.swarm.network=infra_net"
 
-        - "traefik.http.routers.${STACK_KEY}-http.rule=Host(`paperless.media.local`)"
+        - "traefik.http.routers.${STACK_KEY}-http.rule=Host(`${PAPERLESS_HOST}`)"
         - "traefik.http.routers.${STACK_KEY}-http.entrypoints=http"
         - "traefik.http.routers.${STACK_KEY}-http.middlewares=redirect-to-https@file"
         - "traefik.http.routers.${STACK_KEY}-http.service=noop@internal"
 
-        - "traefik.http.routers.${STACK_KEY}-https.rule=Host(`paperless.media.local`)"
+        - "traefik.http.routers.${STACK_KEY}-https.rule=Host(`${PAPERLESS_HOST}`)"
         - "traefik.http.routers.${STACK_KEY}-https.entrypoints=https"
         - "traefik.http.routers.${STACK_KEY}-https.tls.certresolver=step"
         - "traefik.http.routers.${STACK_KEY}-https.service=${STACK_KEY}-svc"
 
-        - "traefik.http.services.${STACK_KEY}-svc.loadbalancer.server.port=8000"
+        - "traefik.http.services.${STACK_KEY}-svc.loadbalancer.server.port=${PAPERLESS_INTERNAL_PORT:-8000}"
 
         - "com.centurylinklabs.watchtower.scope=swarm"
 
