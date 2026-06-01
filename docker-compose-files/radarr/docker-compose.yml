@@ -3,26 +3,58 @@ version: "3.8"
 services:
   radarr:
     image: lscr.io/linuxserver/radarr:latest
+
     environment:
       - PUID=${DOCKER_ROOTPUID:-1000}
       - PGID=${DOCKER_ROOTPGID:-1000}
-      - TZ=${TZ:-Europe/Madrid}
+      - TZ=${DOCKER_TZ}
+
     volumes:
       - ${DOCKER_PATH_PERSISTENT}/radarr:/config
       - ${DOCKER_PATH_MEDIA}/Peliculas:/movies
       - ${DOCKER_PATH_MEDIA}/Descargas/Series:/downloads
+
     ports:
-      - 7878:7878
+      - target: 7878
+        published: ${RADARR_EXTERNAL_PORT:-7878}
+        protocol: tcp
+        mode: ingress
+
     networks:
       - infra_net
+
     deploy:
       mode: replicated
       replicas: 1
+
       placement:
         constraints:
-          - node.role == manager
+          - node.hostname == ${NODE_HOSTNAME}
+
       restart_policy:
         condition: any
+        delay: 10s
+        window: 120s
+
+      update_config:
+        parallelism: 1
+        delay: 10s
+        order: stop-first
+        failure_action: rollback
+        monitor: 30s
+
+      rollback_config:
+        parallelism: 1
+        delay: 10s
+        order: stop-first
+
+      resources:
+        reservations:
+          cpus: "${RADARR_RES_CPU:-0.25}"
+          memory: ${RADARR_RES_MEM:-256M}
+        limits:
+          cpus: "${RADARR_LIM_CPU:-1.00}"
+          memory: ${RADARR_LIM_MEM:-1G}
 
 networks:
   infra_net:
