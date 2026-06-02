@@ -3,57 +3,136 @@ version: "3.8"
 services:
   bitmagnet:
     image: ghcr.io/bitmagnet-io/bitmagnet:latest
+
     environment:
-      - TZ=${TZ:-Europe/Madrid}
-      - POSTGRES_HOST=bitmagnet-postgres
-      - POSTGRES_PASSWORD=${BITMAGNET_DB_PASSWORD}
-      - TMDB_API_KEY=${TMDB_API}
-      - EXTRA_CONFIG_FILES=/config/config.yml
+      TZ: ${DOCKER_TZ}
+      POSTGRES_HOST: bitmagnet-postgres
+      POSTGRES_PASSWORD: ${BITMAGNET_DB_PASSWORD}
+      TMDB_API_KEY: ${TMDB_API}
+      EXTRA_CONFIG_FILES: /config/config.yml
+
     volumes:
       - ${DOCKER_PATH_PERSISTENT}/bitmagnet/config:/config:ro
       - ${DOCKER_PATH_PERSISTENT}/bitmagnet/config:/root/.config/bitmagnet:ro
+
     command:
       - worker
       - run
       - --all
+
     ports:
-      - 3333:3333
-      - 3334:3334/tcp
-      - 3334:3334/udp
+      - target: 3333
+        published: ${BITMAGNET_WEB_PORT:-3333}
+        protocol: tcp
+        mode: host
+      - target: 3334
+        published: ${BITMAGNET_DHT_PORT:-3334}
+        protocol: tcp
+        mode: host
+      - target: 3334
+        published: ${BITMAGNET_DHT_PORT:-3334}
+        protocol: udp
+        mode: host
+
     networks:
       - infra_net
+
     deploy:
       mode: replicated
       replicas: 1
+
       placement:
         constraints:
-          - node.role == manager
+          - node.hostname == ${NODE_HOSTNAME}
+
       restart_policy:
         condition: any
+        delay: 10s
+        window: 120s
+
+      update_config:
+        parallelism: 1
+        delay: 10s
+        order: stop-first
+        failure_action: rollback
+        monitor: 30s
+
+      rollback_config:
+        parallelism: 1
+        delay: 10s
+        order: stop-first
+
+      resources:
+        reservations:
+          cpus: "${BITMAGNET_RES_CPU}"
+          memory: ${BITMAGNET_RES_MEM}
+        limits:
+          cpus: "${BITMAGNET_LIM_CPU}"
+          memory: ${BITMAGNET_LIM_MEM}
+
+      labels:
+        - "com.centurylinklabs.watchtower.scope=swarm"
+
+        - "traefik.enable=true"
+        - "traefik.swarm.network=${DOCKER_NETWORK:-infra_net}"
+
+        - "traefik.http.routers.${STACK_KEY}-http.rule=Host(`${BITMAGNET_HOST}`)"
+        - "traefik.http.routers.${STACK_KEY}-http.entrypoints=http"
+        - "traefik.http.routers.${STACK_KEY}-http.middlewares=redirect-to-https@file"
+        - "traefik.http.routers.${STACK_KEY}-http.service=noop@internal"
+
+        - "traefik.http.routers.${STACK_KEY}-https.rule=Host(`${BITMAGNET_HOST}`)"
+        - "traefik.http.routers.${STACK_KEY}-https.entrypoints=https"
+        - "traefik.http.routers.${STACK_KEY}-https.tls.certresolver=step"
+        - "traefik.http.routers.${STACK_KEY}-https.service=${STACK_KEY}-svc"
+
+        - "traefik.http.services.${STACK_KEY}-svc.loadbalancer.server.port=${BITMAGNET_INTERNAL_PORT:-3333}"
+
     depends_on:
       - bitmagnet-postgres
 
   bitmagnet-postgres:
     image: postgres:16-alpine
+
     environment:
-      - TZ=${TZ:-Europe/Madrid}
-      - POSTGRES_PASSWORD=${BITMAGNET_DB_PASSWORD}
-      - POSTGRES_DB=bitmagnet
-      - PGUSER=postgres
+      TZ: ${DOCKER_TZ}
+      POSTGRES_PASSWORD: ${BITMAGNET_DB_PASSWORD}
+      POSTGRES_DB: bitmagnet
+      PGUSER: postgres
+
     volumes:
       - ${DOCKER_PATH_PERSISTENT}/bitmagnet-postgres:/var/lib/postgresql/data
+
     shm_size: 1g
+
     networks:
       - infra_net
+
     deploy:
       mode: replicated
       replicas: 1
+
       placement:
         constraints:
-          - node.role == manager
+          - node.hostname == ${NODE_HOSTNAME}
+
       restart_policy:
         condition: any
+        delay: 10s
+        window: 120s
+
+      resources:
+        reservations:
+          cpus: "${BITMAGNET_POSTGRES_RES_CPU}"
+          memory: ${BITMAGNET_POSTGRES_RES_MEM}
+        limits:
+          cpus: "${BITMAGNET_POSTGRES_LIM_CPU}"
+          memory: ${BITMAGNET_POSTGRES_LIM_MEM}
+
+      labels:
+        - "com.centurylinklabs.watchtower.scope=swarm"
 
 networks:
   infra_net:
     external: true
+    name: ${DOCKER_NETWORK:-infra_net}
