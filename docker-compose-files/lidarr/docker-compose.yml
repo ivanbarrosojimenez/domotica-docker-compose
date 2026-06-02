@@ -64,8 +64,10 @@ services:
           memory: ${LIDARR_LIM_MEM:-768M}
 
       labels:
+        - "com.centurylinklabs.watchtower.scope=swarm"
+
         - "traefik.enable=true"
-        - "traefik.swarm.network=infra_net"
+        - "traefik.swarm.network=${DOCKER_NETWORK:-infra_net}"
 
         - "traefik.http.routers.${STACK_KEY}-http.rule=Host(`${LIDARR_HOST}`)"
         - "traefik.http.routers.${STACK_KEY}-http.entrypoints=http"
@@ -78,8 +80,6 @@ services:
         - "traefik.http.routers.${STACK_KEY}-https.service=${STACK_KEY}-svc"
 
         - "traefik.http.services.${STACK_KEY}-svc.loadbalancer.server.port=${LIDARR_INTERNAL_PORT:-8686}"
-
-        - "com.centurylinklabs.watchtower.scope=swarm"
 
 networks:
   infra_net:
