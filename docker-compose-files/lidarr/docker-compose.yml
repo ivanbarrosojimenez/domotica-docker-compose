@@ -5,9 +5,9 @@ services:
     image: lscr.io/linuxserver/lidarr:latest
 
     environment:
-      - PUID=${DOCKER_ROOTPUID:-1000}
-      - PGID=${DOCKER_ROOTPGID:-1000}
-      - TZ=${TZ:-Europe/Madrid}
+      PUID: ${DOCKER_ROOTPUID:-1000}
+      PGID: ${DOCKER_ROOTPGID:-1000}
+      TZ: ${DOCKER_TZ:-Europe/Madrid}
 
     volumes:
       - ${DOCKER_PATH_PERSISTENT}/lidarr:/config
@@ -15,13 +15,13 @@ services:
       - ${DOCKER_PATH_MEDIA}/Descargas/Series:/downloads
 
     ports:
-      - target: 8686
-        published: 8686
+      - target: ${LIDARR_INTERNAL_PORT:-8686}
+        published: ${LIDARR_EXTERNAL_PORT:-8686}
         protocol: tcp
         mode: ingress
 
     healthcheck:
-      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:8686 >/dev/null || exit 1"]
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:${LIDARR_INTERNAL_PORT:-8686} >/dev/null || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -36,7 +36,7 @@ services:
 
       placement:
         constraints:
-          - node.role == manager
+          - node.hostname == ${NODE_HOSTNAME}
 
       restart_policy:
         condition: any
@@ -57,15 +57,13 @@ services:
 
       resources:
         reservations:
-          cpus: "${LIDARR_RES_CPU}"
-          memory: ${LIDARR_RES_MEM}
+          cpus: "${LIDARR_RES_CPU:-0.25}"
+          memory: ${LIDARR_RES_MEM:-256M}
         limits:
-          cpus: "${LIDARR_LIM_CPU}"
-          memory: ${LIDARR_LIM_MEM}
+          cpus: "${LIDARR_LIM_CPU:-1.00}"
+          memory: ${LIDARR_LIM_MEM:-768M}
 
       labels:
-        - "com.centurylinklabs.watchtower.scope=swarm"
-
         - "traefik.enable=true"
         - "traefik.swarm.network=infra_net"
 
@@ -79,7 +77,9 @@ services:
         - "traefik.http.routers.${STACK_KEY}-https.tls.certresolver=step"
         - "traefik.http.routers.${STACK_KEY}-https.service=${STACK_KEY}-svc"
 
-        - "traefik.http.services.${STACK_KEY}-svc.loadbalancer.server.port=8686"
+        - "traefik.http.services.${STACK_KEY}-svc.loadbalancer.server.port=${LIDARR_INTERNAL_PORT:-8686}"
+
+        - "com.centurylinklabs.watchtower.scope=swarm"
 
 networks:
   infra_net:
