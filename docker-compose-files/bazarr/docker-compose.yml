@@ -66,7 +66,7 @@ services:
         - "com.centurylinklabs.watchtower.scope=swarm"
 
         - "traefik.enable=true"
-        - "traefik.swarm.network=infra_net"
+        - "traefik.swarm.network=${DOCKER_NETWORK:-infra_net}"
 
         - "traefik.http.routers.${STACK_KEY}-http.rule=Host(`${BAZARR_HOST}`)"
         - "traefik.http.routers.${STACK_KEY}-http.entrypoints=http"
@@ -78,7 +78,7 @@ services:
         - "traefik.http.routers.${STACK_KEY}-https.tls.certresolver=step"
         - "traefik.http.routers.${STACK_KEY}-https.service=${STACK_KEY}-svc"
 
-        - "traefik.http.services.${STACK_KEY}-svc.loadbalancer.server.port=6767"
+        - "traefik.http.services.${STACK_KEY}-svc.loadbalancer.server.port=${BAZARR_INTERNAL_PORT:-6767}"
 
 networks:
   infra_net:
