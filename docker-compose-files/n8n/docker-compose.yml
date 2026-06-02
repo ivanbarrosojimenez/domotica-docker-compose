@@ -14,7 +14,14 @@ services:
       POSTGRES_USER: ${N8N_POSTGRES_USER:-n8n}
       POSTGRES_PASSWORD: ${N8N_POSTGRES_PASSWORD}
       PGDATA: /var/lib/postgresql/data/pgdata
+      EXECUTIONS_DATA_PRUNE: "true"
+      EXECUTIONS_DATA_MAX_AGE: "336"
+      EXECUTIONS_DATA_PRUNE_MAX_COUNT: "10000"
 
+      EXECUTIONS_DATA_SAVE_ON_SUCCESS: "none"
+      EXECUTIONS_DATA_SAVE_ON_ERROR: "all"
+      EXECUTIONS_DATA_SAVE_MANUAL_EXECUTIONS: "true"
+      EXECUTIONS_DATA_SAVE_ON_PROGRESS: "false"
     networks:
       - n8n_backend
 
