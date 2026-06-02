@@ -8,8 +8,8 @@ services:
       TZ: ${DOCKER_TZ}
 
     volumes:
-      - ${DOCKER_PATH_PERSISTENT}/baikal/config:/var/www/baikal/Specific
-      - ${DOCKER_PATH_PERSISTENT}/baikal/data:/var/www/baikal/baikal-data
+      - ${DOCKER_PATH_PERSISTENT}/baikal/config:/var/www/baikal/config
+      - ${DOCKER_PATH_PERSISTENT}/baikal/data:/var/www/baikal/Specific
 
     networks:
       - infra_net
