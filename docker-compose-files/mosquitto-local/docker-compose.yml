@@ -54,11 +54,11 @@ services:
 
       resources:
         reservations:
-          cpus: "${MOSQUITTO_RES_CPU:-0.05}"
-          memory: ${MOSQUITTO_RES_MEM:-64M}
+          cpus: "${MOSQUITTO_RES_CPU:-0.25}"
+          memory: ${MOSQUITTO_RES_MEM:-128M}
         limits:
-          cpus: "${MOSQUITTO_LIM_CPU:-0.25}"
-          memory: ${MOSQUITTO_LIM_MEM:-128M}
+          cpus: "${MOSQUITTO_LIM_CPU:-1}"
+          memory: ${MOSQUITTO_LIM_MEM:-512M}
 
       labels:
         - "com.centurylinklabs.watchtower.scope=swarm"
