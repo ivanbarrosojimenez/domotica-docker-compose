@@ -3,28 +3,86 @@ version: "3.8"
 services:
   zigbee2mqtt:
     image: koenkk/zigbee2mqtt:latest
+
     environment:
-      - PUID=${DOCKER_ROOTPUID}
-      - PGID=${DOCKER_ROOTPGID}
-      - TZ=${DOCKER_TZ}
+      TZ: ${DOCKER_TZ}
+
+    user: "${DOCKER_ROOTPUID:-1000}:${DOCKER_ROOTPGID:-1000}"
+
     volumes:
-      - ${DOCKER_PATH_PERSISTENT}/zigbee2mqtt/data:/app/data
-      - ${DOCKER_PATH_PERSISTENT}/zigbee2mqtt/run/udev:/run/udev:ro
-      - /dev/serial/by-id/usb-Silicon_Labs_Sonoff_Zigbee_3.0_USB_Dongle_Plus_0001-if00-port0:/dev/ttyUSB0
+      - type: bind
+        source: ${DOCKER_PATH_PERSISTENT}/zigbee2mqttzlzb/data
+        target: /app/data
+
+      - type: bind
+        source: ${DOCKER_PATH_TEMPORARY}/zigbee2mqttzlzb/run/udev
+        target: /run/udev
+        read_only: true
+
+      - type: bind
+        source: ${DOCKER_PATH_PERSISTENT}/zigbee2mqttzlzb/log
+        target: /app/log
+
     ports:
-      - 8080:8080
-    user: 0:0
+      - target: 8080
+        published: 8080
+        protocol: tcp
+        mode: host
+
     healthcheck:
-      test: ["CMD", "sh", "-c", "nc -z -w3 192.168.1.151 1883 || exit 1"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-    cap_add:
-      - SYS_TTY_CONFIG
+      test: ["CMD", "/usr/bin/wget", "-q", "-O", "-", "http://127.0.0.1:8080"]
+      interval: 60s
+      timeout: 5s
+      retries: 6
+      start_period: 30s
+
+    networks:
+      - infra_net
+
     deploy:
       mode: replicated
       replicas: 1
+
+      placement:
+        constraints:
+          - node.hostname == ${NODE_HOSTNAME}
+
       restart_policy:
-        condition: on-failure
-        delay: 5s
-        window: 60s
+        condition: any
+        delay: 10s
+        max_attempts: 0
+        window: 120s
+
+      update_config:
+        parallelism: 1
+        delay: 10s
+        order: stop-first
+        failure_action: rollback
+        monitor: 30s
+
+      rollback_config:
+        parallelism: 1
+        delay: 10s
+        order: stop-first
+
+      resources:
+        reservations:
+          cpus: "${ZIGBEE2MQTT_RES_CPU}"
+          memory: ${ZIGBEE2MQTT_RES_MEM}
+        limits:
+          cpus: "${ZIGBEE2MQTT_LIM_CPU}"
+          memory: ${ZIGBEE2MQTT_LIM_MEM}
+
+      labels:
+        - "traefik.enable=true"
+        - "traefik.swarm.network=infra_net"
+        - "traefik.http.routers.zigbee2mqtt.rule=Host(`zigbee-avila.media.local`)"
+        - "traefik.http.routers.zigbee2mqtt.entrypoints=https"
+        - "traefik.http.routers.zigbee2mqtt.tls=true"
+        - "traefik.http.services.zigbee2mqtt.loadbalancer.server.port=8080"
+        - "com.centurylinklabs.watchtower.scope=swarm"
+
+networks:
+  infra_net:
+    external: true
+    name: ${DOCKER_NETWORK:-infra_net}
