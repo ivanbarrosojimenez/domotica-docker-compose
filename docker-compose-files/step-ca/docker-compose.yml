@@ -66,7 +66,14 @@ services:
         limits:
           cpus: "${STEP_CA_LIM_CPU}"
           memory: ${STEP_CA_LIM_MEM}
+          
+      placement:
+        constraints:
+          - node.hostname == ${NODE_HOSTNAME}
 
+      labels:
+        com.centurylinklabs.watchtower.scope: "swarm"
+        
 networks:
   infra_net:
     external: true
