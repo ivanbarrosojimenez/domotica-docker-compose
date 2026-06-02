@@ -3,158 +3,148 @@ version: "3.9"
 services:
   nextclouddb:
     image: mariadb:10.6
+
     environment:
-      - MYSQL_ROOT_PASSWORD=${NEXTCLOUD_DB_ROOT_PASSWORD}
-      - MYSQL_DATABASE=${NEXTCLOUD_DB_NAME}
-      - MYSQL_USER=${NEXTCLOUD_DB_USER}
-      - MYSQL_PASSWORD=${NEXTCLOUD_DB_PASSWORD}
-      - TZ=${DOCKER_TZ}
+      MYSQL_ROOT_PASSWORD: ${NEXTCLOUD_DB_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${NEXTCLOUD_DB_NAME}
+      MYSQL_USER: ${NEXTCLOUD_DB_USER}
+      MYSQL_PASSWORD: ${NEXTCLOUD_DB_PASSWORD}
+      TZ: ${DOCKER_TZ}
+
     volumes:
       - ${DOCKER_PATH_PERSISTENT}/nextcloud/nextclouddb:/var/lib/mysql
+
     networks:
       - infra_net
-    healthcheck:
-      test: ["CMD-SHELL", "mysqladmin ping -h localhost -u${NEXTCLOUD_DB_USER} -p${NEXTCLOUD_DB_PASSWORD} | grep 'mysqld is alive' || exit 1"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 20s
+
     deploy:
       mode: replicated
       replicas: 1
-      
+
+      placement:
+        constraints:
+          - node.hostname == ${NODE_HOSTNAME}
+
       restart_policy:
         condition: any
         delay: 10s
         window: 120s
-        
-      update_config:
-        parallelism: 1
-        delay: 10s
-        order: stop-first
-        failure_action: rollback
-        monitor: 30s
 
-      rollback_config:
-        parallelism: 1
-        delay: 10s
-        order: stop-first
-        
       resources:
         reservations:
-          cpus: "${NEXTCLOUD_DB_RES_CPU}"
-          memory: ${NEXTCLOUD_DB_RES_MEM}
+          cpus: "${NEXTCLOUD_DB_RES_CPU:-0.25}"
+          memory: ${NEXTCLOUD_DB_RES_MEM:-512M}
         limits:
-          cpus: "${NEXTCLOUD_DB_LIM_CPU}"
-          memory: ${NEXTCLOUD_DB_LIM_MEM}
+          cpus: "${NEXTCLOUD_DB_LIM_CPU:-1.00}"
+          memory: ${NEXTCLOUD_DB_LIM_MEM:-1G}
 
   nextcloud_redis:
     image: redis:alpine
+
     command: ["redis-server", "--save", "60", "1", "--loglevel", "warning"]
+
     volumes:
       - ${DOCKER_PATH_PERSISTENT}/nextcloud/redis:/data
+
     networks:
       - infra_net
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 10s
+
     deploy:
       mode: replicated
       replicas: 1
-      
+
+      placement:
+        constraints:
+          - node.hostname == ${NODE_HOSTNAME}
+
       restart_policy:
         condition: any
         delay: 10s
         window: 120s
-        
-      update_config:
-        parallelism: 1
-        delay: 10s
-        order: stop-first
-        failure_action: rollback
-        monitor: 30s
 
-      rollback_config:
-        parallelism: 1
-        delay: 10s
-        order: stop-first
-        
       resources:
         reservations:
-          cpus: "${NEXTCLOUD_REDIS_RES_CPU}"
-          memory: ${NEXTCLOUD_REDIS_RES_MEM}
+          cpus: "${NEXTCLOUD_REDIS_RES_CPU:-0.10}"
+          memory: ${NEXTCLOUD_REDIS_RES_MEM:-64M}
         limits:
-          cpus: "${NEXTCLOUD_REDIS_LIM_CPU}"
-          memory: ${NEXTCLOUD_REDIS_LIM_MEM}
+          cpus: "${NEXTCLOUD_REDIS_LIM_CPU:-0.50}"
+          memory: ${NEXTCLOUD_REDIS_LIM_MEM:-256M}
 
   nextcloud:
     image: nextcloud:latest
+
     environment:
-      - PUID=${DOCKER_ROOTPUID}
-      - PGID=${DOCKER_ROOTPGID}
-      - TZ=${DOCKER_TZ}
-      - MYSQL_HOST=nextclouddb
-      - MYSQL_DATABASE=${NEXTCLOUD_DB_NAME}
-      - MYSQL_USER=${NEXTCLOUD_DB_USER}
-      - MYSQL_PASSWORD=${NEXTCLOUD_DB_PASSWORD}
-      - REDIS_HOST=nextcloud_redis
-      - REDIS_PORT=6379
+      PUID: ${DOCKER_ROOTPUID}
+      PGID: ${DOCKER_ROOTPGID}
+      TZ: ${DOCKER_TZ}
+      MYSQL_HOST: nextclouddb
+      MYSQL_DATABASE: ${NEXTCLOUD_DB_NAME}
+      MYSQL_USER: ${NEXTCLOUD_DB_USER}
+      MYSQL_PASSWORD: ${NEXTCLOUD_DB_PASSWORD}
+      REDIS_HOST: nextcloud_redis
+      REDIS_PORT: 6379
+      NEXTCLOUD_TRUSTED_DOMAINS: ${NEXTCLOUD_TRUSTED_DOMAINS}
+      OVERWRITEHOST: ${NEXTCLOUD_HOST}
+      OVERWRITEPROTOCOL: https
+
     volumes:
       - ${DOCKER_PATH_PERSISTENT}/nextcloud/config:/var/www/html
       - ${NEXTCLOUD_DATA_PATH}/data:/var/www/html/data
+
     ports:
-      - target: 80
-        published: ${NEXTCLOUD_EXTERNAL_PORT}
+      - target: ${NEXTCLOUD_INTERNAL_PORT:-80}
+        published: ${NEXTCLOUD_EXTERNAL_PORT:-8443}
         protocol: tcp
         mode: ingress
+
     networks:
       - infra_net
+
     depends_on:
-      nextclouddb:
-        condition: service_healthy
-      nextcloud_redis:
-        condition: service_healthy
+      - nextclouddb
+      - nextcloud_redis
+
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost/status.php || exit 1"]
-      interval: 60s
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1/status.php >/dev/null || exit 1"]
+      interval: 30s
       timeout: 10s
       retries: 5
-      start_period: 40s
+      start_period: 90s
+
     deploy:
       mode: replicated
-      replicas: ${NEXTCLOUD_REPLICAS}
-      
+      replicas: ${NEXTCLOUD_REPLICAS:-1}
+
+      placement:
+        constraints:
+          - node.hostname == ${NODE_HOSTNAME}
+
       restart_policy:
         condition: any
         delay: 10s
         window: 120s
-        
+
       update_config:
         parallelism: 1
         delay: 10s
         order: stop-first
         failure_action: rollback
-        monitor: 30s
+        monitor: 60s
 
       rollback_config:
         parallelism: 1
         delay: 10s
         order: stop-first
-        
+
       resources:
         reservations:
-          cpus: "${NEXTCLOUD_RES_CPU}"
-          memory: ${NEXTCLOUD_RES_MEM}
+          cpus: "${NEXTCLOUD_RES_CPU:-0.50}"
+          memory: ${NEXTCLOUD_RES_MEM:-768M}
         limits:
-          cpus: "${NEXTCLOUD_LIM_CPU}"
-          memory: ${NEXTCLOUD_LIM_MEM}
+          cpus: "${NEXTCLOUD_LIM_CPU:-2.00}"
+          memory: ${NEXTCLOUD_LIM_MEM:-2G}
 
       labels:
-        - "com.centurylinklabs.watchtower.scope=swarm"
-
         - "traefik.enable=true"
         - "traefik.swarm.network=infra_net"
 
@@ -168,7 +158,9 @@ services:
         - "traefik.http.routers.${STACK_KEY}-https.tls.certresolver=step"
         - "traefik.http.routers.${STACK_KEY}-https.service=${STACK_KEY}-svc"
 
-        - "traefik.http.services.${STACK_KEY}-svc.loadbalancer.server.port=80"
+        - "traefik.http.services.${STACK_KEY}-svc.loadbalancer.server.port=${NEXTCLOUD_INTERNAL_PORT:-80}"
+
+        - "com.centurylinklabs.watchtower.scope=swarm"
 
 networks:
   infra_net:
