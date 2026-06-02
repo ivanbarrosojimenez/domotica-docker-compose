@@ -1,0 +1,160 @@
+version: "3.9"
+
+services:
+  n8n-postgres:
+    image: ghcr.io/danielptv/postgres-multiple-databases:latest
+    hostname: n8n-postgres
+
+    volumes:
+      - ${DOCKER_PATH_PERSISTENT}/n8n/postgres:/var/lib/postgresql/data
+
+    environment:
+      TZ: ${DOCKER_TZ}
+      POSTGRES_DB: ${N8N_POSTGRES_DB:-n8n}
+      POSTGRES_USER: ${N8N_POSTGRES_USER:-n8n}
+      POSTGRES_PASSWORD: ${N8N_POSTGRES_PASSWORD}
+      PGDATA: /var/lib/postgresql/data/pgdata
+
+    networks:
+      - n8n_backend
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${N8N_POSTGRES_USER:-n8n} -d ${N8N_POSTGRES_DB:-n8n} || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 20s
+
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.hostname == ${NODE_HOSTNAME}
+      restart_policy:
+        condition: any
+        delay: 10s
+        window: 120s
+      update_config:
+        parallelism: 1
+        delay: 10s
+        order: stop-first
+        failure_action: rollback
+        monitor: 30s
+      rollback_config:
+        parallelism: 1
+        delay: 10s
+        order: stop-first
+      resources:
+        reservations:
+          cpus: "${N8N_POSTGRES_RES_CPU:-0.25}"
+          memory: ${N8N_POSTGRES_RES_MEM:-256M}
+        limits:
+          cpus: "${N8N_POSTGRES_LIM_CPU:-1.00}"
+          memory: ${N8N_POSTGRES_LIM_MEM:-1G}
+
+  n8n:
+    image: docker.n8n.io/n8nio/n8n:1.123.28
+    hostname: n8n
+    user: "${DOCKER_ROOTPUID}:${DOCKER_ROOTPGID}"
+
+    ports:
+      - target: ${N8N_INTERNAL_PORT:-5678}
+        published: ${N8N_EXTERNAL_PORT:-5678}
+        protocol: tcp
+        mode: ingress
+
+    volumes:
+      - ${DOCKER_PATH_PERSISTENT}/n8n/data:/home/node/.n8n
+
+    environment:
+      TZ: ${DOCKER_TZ}
+
+      DB_TYPE: postgresdb
+      DB_POSTGRESDB_HOST: n8n-postgres
+      DB_POSTGRESDB_PORT: 5432
+      DB_POSTGRESDB_DATABASE: ${N8N_POSTGRES_DB:-n8n}
+      DB_POSTGRESDB_USER: ${N8N_POSTGRES_USER:-n8n}
+      DB_POSTGRESDB_PASSWORD: ${N8N_POSTGRES_PASSWORD}
+
+      N8N_HOST: ${N8N_HOST}
+      N8N_PORT: ${N8N_INTERNAL_PORT:-5678}
+      N8N_PROTOCOL: https
+      N8N_EDITOR_BASE_URL: https://${N8N_HOST}
+      WEBHOOK_URL: ${N8N_WEBHOOK_URL}
+      N8N_PROXY_HOPS: 1
+
+      N8N_ENCRYPTION_KEY: ${N8N_ENCRYPTION_KEY}
+      N8N_DIAGNOSTICS_ENABLED: "false"
+
+      N8N_RUNNERS_ENABLED: "true"
+      N8N_BLOCK_ENV_ACCESS_IN_NODE: "true"
+      N8N_GIT_NODE_DISABLE_BARE_REPOS: "true"
+
+    networks:
+      - infra_net
+      - n8n_backend
+
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "node -e \"const net=require('net'); const s=net.createConnection({host:'127.0.0.1',port:process.env.N8N_PORT||5678},()=>{s.end();process.exit(0)}); s.on('error',()=>process.exit(1)); setTimeout(()=>process.exit(1),3000);\""
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 120s
+
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.hostname == ${NODE_HOSTNAME}
+      restart_policy:
+        condition: any
+        delay: 10s
+        window: 120s
+      update_config:
+        parallelism: 1
+        delay: 10s
+        order: stop-first
+        failure_action: rollback
+        monitor: 30s
+      rollback_config:
+        parallelism: 1
+        delay: 10s
+        order: stop-first
+      resources:
+        reservations:
+          cpus: "${N8N_RES_CPU:-0.50}"
+          memory: ${N8N_RES_MEM:-512M}
+        limits:
+          cpus: "${N8N_LIM_CPU:-2.00}"
+          memory: ${N8N_LIM_MEM:-2G}
+      labels:
+        - "traefik.enable=true"
+        - "traefik.swarm.network=infra_net"
+
+        - "traefik.http.routers.${STACK_KEY}-http.rule=Host(`${N8N_HOST}`)"
+        - "traefik.http.routers.${STACK_KEY}-http.entrypoints=http"
+        - "traefik.http.routers.${STACK_KEY}-http.middlewares=redirect-to-https@file"
+        - "traefik.http.routers.${STACK_KEY}-http.service=noop@internal"
+
+        - "traefik.http.routers.${STACK_KEY}-https.rule=Host(`${N8N_HOST}`)"
+        - "traefik.http.routers.${STACK_KEY}-https.entrypoints=https"
+        - "traefik.http.routers.${STACK_KEY}-https.tls.certresolver=step"
+        - "traefik.http.routers.${STACK_KEY}-https.service=${STACK_KEY}-svc"
+
+        - "traefik.http.services.${STACK_KEY}-svc.loadbalancer.server.port=${N8N_INTERNAL_PORT:-5678}"
+
+        - "com.centurylinklabs.watchtower.scope=swarm"
+
+networks:
+  infra_net:
+    external: true
+
+  n8n_backend:
+    driver: overlay
+    attachable: true
