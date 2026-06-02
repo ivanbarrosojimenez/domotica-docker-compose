@@ -3,34 +3,42 @@ version: "3.8"
 services:
   jellyfin:
     image: jellyfin/jellyfin:latest
-    
+
     ports:
-      - target: 8096
-        published: 8096
+      - target: ${JELLYFIN_INTERNAL_PORT:-8096}
+        published: ${JELLYFIN_EXTERNAL_PORT:-8096}
         protocol: tcp
         mode: ingress
-        
+
     volumes:
       - ${DOCKER_PATH_PERSISTENT}/jellyfin/config:/config
+      - ${DOCKER_PATH_TEMPORARY}/jellyfin/cache:/cache
+      - ${DOCKER_PATH_TEMPORARY}/jellyfin/transcodes:/transcodes
       - ${DOCKER_PATH_MEDIA}/Peliculas:/media/movies
       - ${DOCKER_PATH_MEDIA}/Series:/media/tv
       - ${DOCKER_PATH_MEDIA}/Musica:/media/music
       - ${DOCKER_PATH_MEDIA}/Libros:/media/libros
+
     environment:
-      - TZ=Europe/Madrid
+      TZ: ${DOCKER_TZ}
+
     networks:
       - infra_net
 
     healthcheck:
-      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:8096/health >/dev/null || exit 1"]
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:${JELLYFIN_INTERNAL_PORT:-8096}/health >/dev/null || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 5
-      start_period: 60s
-      
+      start_period: 90s
+
     deploy:
       mode: replicated
       replicas: 1
+
+      placement:
+        constraints:
+          - node.hostname == ${NODE_HOSTNAME}
 
       restart_policy:
         condition: any
@@ -51,13 +59,12 @@ services:
 
       resources:
         reservations:
-          cpus: "${JELLYFIN_RES_CPU}"
-          memory: ${JELLYFIN_RES_MEM}
+          cpus: "${JELLYFIN_RES_CPU:-0.50}"
+          memory: ${JELLYFIN_RES_MEM:-512M}
         limits:
-          cpus: "${JELLYFIN_LIM_CPU}"
-          memory: ${JELLYFIN_LIM_MEM}
+          cpus: "${JELLYFIN_LIM_CPU:-3.00}"
+          memory: ${JELLYFIN_LIM_MEM:-3G}
 
-      labels:
       labels:
         - "com.centurylinklabs.watchtower.scope=swarm"
 
@@ -78,7 +85,7 @@ services:
         - "traefik.http.middlewares.${STACK_KEY}-headers.headers.customrequestheaders.X-Forwarded-Proto=https"
         - "traefik.http.middlewares.${STACK_KEY}-headers.headers.customrequestheaders.X-Forwarded-Host=${JELLYFIN_HOST}"
 
-        - "traefik.http.services.${STACK_KEY}-svc.loadbalancer.server.port=8096"
+        - "traefik.http.services.${STACK_KEY}-svc.loadbalancer.server.port=${JELLYFIN_INTERNAL_PORT:-8096}"
 
 networks:
   infra_net:
