@@ -4,7 +4,7 @@ services:
   homer:
     image: b4bz/homer:latest
     volumes:
-      - ${DOCKER_PATH_PERSISTENT}/homer/assets:/www/assets
+      - ${DOCKER_PATH_PERSISTENT}/homer${HOMER_PATH_SUFFIX}/assets:/www/assets    
     networks:
       - infra_net
 
