@@ -10,31 +10,31 @@ services:
       TZ: "${DOCKER_TZ}"
 
       UN_LOG_FILE: "/downloads/unpackerr.log"
-      UN_LOG_FILES: "5"
-      UN_LOG_FILE_MB: "10"
-      UN_INTERVAL: "2m"
-      UN_START_DELAY: "1m"
-      UN_RETRY_DELAY: "5m"
-      UN_MAX_RETRIES: "3"
-      UN_PARALLEL: "1"
-      UN_FILE_MODE: "0644"
-      UN_DIR_MODE: "0755"
+      UN_LOG_FILES: "${UNPACKERR_LOG_FILES:-5}"
+      UN_LOG_FILE_MB: "${UNPACKERR_LOG_FILE_MB:-10}"
+      UN_INTERVAL: "${UNPACKERR_INTERVAL:-2m}"
+      UN_START_DELAY: "${UNPACKERR_START_DELAY:-1m}"
+      UN_RETRY_DELAY: "${UNPACKERR_RETRY_DELAY:-5m}"
+      UN_MAX_RETRIES: "${UNPACKERR_MAX_RETRIES:-3}"
+      UN_PARALLEL: "${UNPACKERR_PARALLEL:-1}"
+      UN_FILE_MODE: "${UNPACKERR_FILE_MODE:-0644}"
+      UN_DIR_MODE: "${UNPACKERR_DIR_MODE:-0755}"
 
       UN_SONARR_0_URL: "${UNPACKERR_SONARR_URL}"
       UN_SONARR_0_API_KEY: "${UNPACKERR_SONARR_API_KEY}"
       UN_SONARR_0_PATHS_0: "/downloads"
-      UN_SONARR_0_PROTOCOLS: "torrent,TorrentDownloadProtocol"
-      UN_SONARR_0_TIMEOUT: "10s"
-      UN_SONARR_0_DELETE_DELAY: "5m"
-      UN_SONARR_0_DELETE_ORIG: "false"
+      UN_SONARR_0_PROTOCOLS: "${UNPACKERR_SONARR_PROTOCOLS:-torrent,TorrentDownloadProtocol}"
+      UN_SONARR_0_TIMEOUT: "${UNPACKERR_SONARR_TIMEOUT:-10s}"
+      UN_SONARR_0_DELETE_DELAY: "${UNPACKERR_SONARR_DELETE_DELAY:-5m}"
+      UN_SONARR_0_DELETE_ORIG: "${UNPACKERR_SONARR_DELETE_ORIG:-false}"
 
       UN_RADARR_0_URL: "${UNPACKERR_RADARR_URL}"
       UN_RADARR_0_API_KEY: "${UNPACKERR_RADARR_API_KEY}"
       UN_RADARR_0_PATHS_0: "/downloads"
-      UN_RADARR_0_PROTOCOLS: "torrent,TorrentDownloadProtocol"
-      UN_RADARR_0_TIMEOUT: "10s"
-      UN_RADARR_0_DELETE_DELAY: "5m"
-      UN_RADARR_0_DELETE_ORIG: "false"
+      UN_RADARR_0_PROTOCOLS: "${UNPACKERR_RADARR_PROTOCOLS:-torrent,TorrentDownloadProtocol}"
+      UN_RADARR_0_TIMEOUT: "${UNPACKERR_RADARR_TIMEOUT:-10s}"
+      UN_RADARR_0_DELETE_DELAY: "${UNPACKERR_RADARR_DELETE_DELAY:-5m}"
+      UN_RADARR_0_DELETE_ORIG: "${UNPACKERR_RADARR_DELETE_ORIG:-false}"
 
     volumes:
       - type: bind
@@ -51,6 +51,10 @@ services:
     deploy:
       mode: replicated
       replicas: 1
+
+      placement:
+        constraints:
+          - node.hostname == ${NODE_HOSTNAME}
 
       restart_policy:
         condition: any
