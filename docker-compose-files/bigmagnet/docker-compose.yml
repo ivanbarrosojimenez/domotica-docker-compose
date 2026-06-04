@@ -37,6 +37,13 @@ services:
     networks:
       - infra_net
 
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://127.0.0.1:${BITMAGNET_INTERNAL_PORT:-3333} || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
     deploy:
       mode: replicated
       replicas: 1
@@ -108,6 +115,13 @@ services:
     networks:
       - infra_net
 
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d bitmagnet || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
     deploy:
       mode: replicated
       replicas: 1
@@ -120,6 +134,18 @@ services:
         condition: any
         delay: 10s
         window: 120s
+
+      update_config:
+        parallelism: 1
+        delay: 10s
+        order: stop-first
+        failure_action: rollback
+        monitor: 30s
+
+      rollback_config:
+        parallelism: 1
+        delay: 10s
+        order: stop-first
 
       resources:
         reservations:
