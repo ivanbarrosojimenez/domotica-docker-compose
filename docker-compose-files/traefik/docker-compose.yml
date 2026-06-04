@@ -24,11 +24,6 @@ services:
       - ${DOCKER_PATH_PERSISTENT}/step-ca/certs/root_ca.crt:/etc/traefik/certs/root_ca.crt:ro
       - ${DOCKER_PATH_PERSISTENT}/traefik/traefik.yml:/etc/traefik/traefik.yml:ro
       - ${DOCKER_PATH_PERSISTENT}/traefik/dynamic.yml:/etc/traefik/dynamic.yml:ro
-   # configs:
-   #   - source: traefik_static_config
-   #     target: /etc/traefik/traefik.yml
-   #   - source: traefik_dynamic_config
-   #     target: /etc/traefik/dynamic.yml
 
     secrets:
       - media_local_crt
@@ -36,15 +31,28 @@ services:
 
     networks:
       - infra_net
-      
+
     dns:
       - ${DNS_PRIMARY}
       - ${DNS_SECONDARY:-1.1.1.1}
+
     extra_hosts:
       - "${TRAEFIK_STEP_CA_HOST}:${TRAEFIK_STEP_CA_IP}"
+
+    healthcheck:
+      test: ["CMD", "traefik", "healthcheck", "--ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
     deploy:
       mode: replicated
       replicas: ${TRAEFIK_REPLICAS:-1}
+
+      placement:
+        constraints:
+          - node.hostname == ${NODE_HOSTNAME}
 
       restart_policy:
         condition: any
@@ -77,12 +85,7 @@ services:
 networks:
   infra_net:
     external: true
-
-#configs:
-#  traefik_static_config:
-#    external: true
-#  traefik_dynamic_config:
-#    external: true
+    name: ${DOCKER_NETWORK:-infra_net}
 
 secrets:
   media_local_crt:
