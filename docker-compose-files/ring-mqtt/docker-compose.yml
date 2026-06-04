@@ -1,32 +1,74 @@
-version: "3"
+version: "3.9"
+
 services:
   ring-mqtt:
-      container_name: ${DOCKER_CONTAINER_NAME_PREFIX}ring-mqtt
-      image: tsightler/ring-mqtt
-      mac_address: ${DOCKER_CONTAINER_MAC}
-      networks:
-        domotica_macvlan0:
-          ipv4_address: ${DOCKER_IPV4}
-        infra_net:
-      ports:
-        - 8554:8554   # Enable RTSP port for external media player access
-      privileged: true
-      volumes:
-        - ${DOCKER_PATH_PERSISTENT}/ring-mqtt/data:/data:rw  # Mapping of local folder to provide persistent storage
-      environment:
-        - TZ=${DOCKER_TZ} 
-      logging:   #limit logs to 10m and 3 files
-        options:
-          max-size: 10m
-          max-file: "3"   
-      restart: unless-stopped
-      healthcheck:
-        test: ["CMD", "ping", "-c", "1", "localhost"]
-        interval: 30s
-        timeout: 10s
-        retries: 3
+    image: tsightler/ring-mqtt:latest
+
+    environment:
+      TZ: ${DOCKER_TZ}
+
+    volumes:
+      - ${DOCKER_PATH_PERSISTENT}/ring-mqtt/data:/data:rw
+
+    ports:
+      - target: 8554
+        published: ${RING_MQTT_RTSP_PORT:-8554}
+        protocol: tcp
+        mode: host
+
+    networks:
+      - infra_net
+
+    healthcheck:
+      test: ["CMD-SHELL", "test -s /data/config.json || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+    deploy:
+      mode: replicated
+      replicas: 1
+
+      placement:
+        constraints:
+          - node.hostname == ${NODE_HOSTNAME}
+
+      restart_policy:
+        condition: any
+        delay: 10s
+        window: 120s
+
+      update_config:
+        parallelism: 1
+        delay: 10s
+        order: stop-first
+        failure_action: rollback
+        monitor: 30s
+
+      rollback_config:
+        parallelism: 1
+        delay: 10s
+        order: stop-first
+
+      resources:
+        reservations:
+          cpus: "${RING_MQTT_RES_CPU}"
+          memory: ${RING_MQTT_RES_MEM}
+        limits:
+          cpus: "${RING_MQTT_LIM_CPU}"
+          memory: ${RING_MQTT_LIM_MEM}
+
+      labels:
+        - "com.centurylinklabs.watchtower.scope=swarm"
+
 networks:
-  domotica_macvlan0:
-    external: true
   infra_net:
     external: true
+    name: ${DOCKER_NETWORK:-infra_net}
