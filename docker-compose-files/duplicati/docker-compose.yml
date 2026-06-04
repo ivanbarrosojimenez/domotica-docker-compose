@@ -21,6 +21,8 @@ services:
     environment:
       - TZ=${DOCKER_TZ}
 
+
+
     networks:
       - infra_net
 
@@ -35,6 +37,9 @@ services:
       mode: replicated
       replicas: ${DUPLICATI_REPLICAS:-1}
 
+      placement:
+        constraints:
+          - node.hostname == ${NODE_HOSTNAME}
       restart_policy:
         condition: any
         delay: 10s
