@@ -24,6 +24,13 @@ services:
     networks:
       - infra_net
 
+    healthcheck:
+      test: ["CMD-SHELL", "tr '\\0' ' ' < /proc/1/cmdline | grep -qi 'duplicati' && test -d /data/Duplicati || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 90s
+      
     deploy:
       mode: replicated
       replicas: ${DUPLICATI_REPLICAS:-1}
