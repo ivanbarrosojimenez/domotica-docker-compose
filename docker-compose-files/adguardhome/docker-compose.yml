@@ -3,7 +3,7 @@ version: "3.8"
 services:
   adguardhome:
     image: adguard/adguardhome:latest
-    container_name: ${DOCKER_CONTAINER_NAME_PREFIX}adguardhome
+    container_name: ${DOCKER_CONTAINER_NAME_PREFIX:-}adguardhome
     hostname: ${ADGUARD_HOSTNAME:-adguardhome}
     restart: unless-stopped
 
@@ -19,12 +19,12 @@ services:
 
     networks:
       domotica_macvlan0:
-        ipv4_address: ${DOCKER_IPV4}
+        ipv4_address: ${DOCKER_IPV4:?DOCKER_IPV4 is required}
 
     volumes:
-      - ${ADGUARD_WORK_PATH}:/opt/adguardhome/work:rw
-      - ${ADGUARD_CONFIG_PATH}:/opt/adguardhome/conf:rw
-      - ${TRAEFIK_CERTS_PATH}:/opt/adguardhome/certs:ro
+      - ${DOCKER_PATH_TEMPORARY}/${ADGUARD_WORK_DIR:?ADGUARD_WORK_DIR is required}:/opt/adguardhome/work:rw
+      - ${DOCKER_PATH_PERSISTENT}/${ADGUARD_CONFIG_DIR:?ADGUARD_CONFIG_DIR is required}:/opt/adguardhome/conf:rw
+      - ${DOCKER_PATH_TEMPORARY}/traextor_certs:/opt/adguardhome/certs:ro
 
 networks:
   domotica_macvlan0:
