@@ -10,7 +10,7 @@ services:
       POSTGRES_PASSWORD: ${BITMAGNET_DB_PASSWORD}
       TMDB_API_KEY: ${TMDB_API}
       EXTRA_CONFIG_FILES: /config/config.yml
-
+      APP_ENV: production
     volumes:
       - ${DOCKER_PATH_PERSISTENT}/bitmagnet/config:/config:ro
       - ${DOCKER_PATH_PERSISTENT}/bitmagnet/config:/root/.config/bitmagnet:ro
