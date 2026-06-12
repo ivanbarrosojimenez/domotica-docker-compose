@@ -1,115 +1,160 @@
-version: "3.9"
+version: "3.8"
 
 services:
-  app:
-    image: monica:latest
+  bitmagnet:
+    image: ghcr.io/bitmagnet-io/bitmagnet:latest
 
     environment:
-      APP_KEY: ${APP_KEY}
-      DB_HOST: monica-service_db
-      DB_USERNAME: ${MONICA_USER}
-      DB_PASSWORD: ${MONICA_PASS}
+      TZ: ${DOCKER_TZ}
+      POSTGRES_HOST: bitmagnet-postgres
+      POSTGRES_PASSWORD: ${BITMAGNET_DB_PASSWORD}
+      TMDB_API_KEY: ${TMDB_API}
+      EXTRA_CONFIG_FILES: /config/config.yml
 
     volumes:
-      - ${DOCKER_PATH_PERSISTENT}/monica/data:/var/www/html/storage
+      - ${DOCKER_PATH_PERSISTENT}/bitmagnet/config:/config:ro
+      - ${DOCKER_PATH_PERSISTENT}/bitmagnet/config:/root/.config/bitmagnet:ro
+
+    command:
+      - worker
+      - run
+      - --all
 
     ports:
-      - target: 80
-        published: ${MONICA_PORT:-8090}
+      - target: 3333
+        published: ${BITMAGNET_WEB_PORT:-3333}
         protocol: tcp
-        mode: ingress
+        mode: host
+      - target: 3334
+        published: ${BITMAGNET_DHT_PORT:-3334}
+        protocol: tcp
+        mode: host
+      - target: 3334
+        published: ${BITMAGNET_DHT_PORT:-3334}
+        protocol: udp
+        mode: host
 
     networks:
-      - monica_backend
       - infra_net
+
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://127.0.0.1:${BITMAGNET_INTERNAL_PORT:-3333} || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
 
     deploy:
       mode: replicated
-      replicas: ${MONICA_REPLICAS:-1}
+      replicas: 1
+
       placement:
         constraints:
           - node.hostname == ${NODE_HOSTNAME}
+
       restart_policy:
         condition: any
         delay: 10s
         window: 120s
+
       update_config:
         parallelism: 1
         delay: 10s
         order: stop-first
         failure_action: rollback
-        monitor: 60s
+        monitor: 30s
+
       rollback_config:
         parallelism: 1
         delay: 10s
         order: stop-first
+
       resources:
         reservations:
-          cpus: "${MONICA_RES_CPU:-0.25}"
-          memory: ${MONICA_RES_MEM:-256M}
+          cpus: "${BITMAGNET_RES_CPU}"
+          memory: ${BITMAGNET_RES_MEM}
         limits:
-          cpus: "${MONICA_LIM_CPU:-1.00}"
-          memory: ${MONICA_LIM_MEM:-1G}
+          cpus: "${BITMAGNET_LIM_CPU}"
+          memory: ${BITMAGNET_LIM_MEM}
+
       labels:
         - "com.centurylinklabs.watchtower.scope=swarm"
 
         - "traefik.enable=true"
         - "traefik.swarm.network=${DOCKER_NETWORK:-infra_net}"
 
-        - "traefik.http.routers.${STACK_KEY}-http.rule=Host(`${MONICA_HOST}`)"
+        - "traefik.http.routers.${STACK_KEY}-http.rule=Host(`${BITMAGNET_HOST}`)"
         - "traefik.http.routers.${STACK_KEY}-http.entrypoints=http"
         - "traefik.http.routers.${STACK_KEY}-http.middlewares=redirect-to-https@file"
         - "traefik.http.routers.${STACK_KEY}-http.service=noop@internal"
 
-        - "traefik.http.routers.${STACK_KEY}-https.rule=Host(`${MONICA_HOST}`)"
+        - "traefik.http.routers.${STACK_KEY}-https.rule=Host(`${BITMAGNET_HOST}`)"
         - "traefik.http.routers.${STACK_KEY}-https.entrypoints=https"
         - "traefik.http.routers.${STACK_KEY}-https.tls.certresolver=step"
         - "traefik.http.routers.${STACK_KEY}-https.service=${STACK_KEY}-svc"
 
-        - "traefik.http.services.${STACK_KEY}-svc.loadbalancer.server.port=80"
+        - "traefik.http.services.${STACK_KEY}-svc.loadbalancer.server.port=${BITMAGNET_INTERNAL_PORT:-3333}"
 
-  db:
-    image: mariadb:11
+    depends_on:
+      - bitmagnet-postgres
+
+  bitmagnet-postgres:
+    image: postgres:16-alpine
 
     environment:
-      MYSQL_RANDOM_ROOT_PASSWORD: "true"
-      MYSQL_DATABASE: monica
-      MYSQL_USER: ${MONICA_USER}
-      MYSQL_PASSWORD: ${MONICA_PASS}
+      TZ: ${DOCKER_TZ}
+      POSTGRES_PASSWORD: ${BITMAGNET_DB_PASSWORD}
+      POSTGRES_DB: bitmagnet
+      PGUSER: postgres
 
     volumes:
-      - /home/docker-images/volumes/mysql/_data:/var/lib/mysql
+      - ${DOCKER_PATH_PERSISTENT}/bitmagnet-postgres:/var/lib/postgresql/data
+
+    shm_size: 1g
 
     networks:
-      - monica_backend
+      - infra_net
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d bitmagnet || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
 
     deploy:
       mode: replicated
       replicas: 1
+
       placement:
         constraints:
           - node.hostname == ${NODE_HOSTNAME}
+
       restart_policy:
         condition: any
         delay: 10s
         window: 120s
+
       update_config:
         parallelism: 1
         delay: 10s
         order: stop-first
         failure_action: rollback
-        monitor: 60s
+        monitor: 30s
+
       rollback_config:
         parallelism: 1
         delay: 10s
         order: stop-first
+
       resources:
         reservations:
-          cpus: "${MONICA_DB_RES_CPU:-0.25}"
-          memory: ${MONICA_DB_RES_MEM:-256M}
+          cpus: "${BITMAGNET_POSTGRES_RES_CPU}"
+          memory: ${BITMAGNET_POSTGRES_RES_MEM}
         limits:
-          cpus: "${MONICA_DB_LIM_CPU:-1.00}"
-          memory: ${MONICA_DB_LIM_MEM:-1G}
+          cpus: "${BITMAGNET_POSTGRES_LIM_CPU}"
+          memory: ${BITMAGNET_POSTGRES_LIM_MEM}
+
       labels:
         - "com.centurylinklabs.watchtower.scope=swarm"
 
@@ -117,7 +162,3 @@ networks:
   infra_net:
     external: true
     name: ${DOCKER_NETWORK:-infra_net}
-
-  monica_backend:
-    driver: overlay
-    attachable: true
