@@ -2,37 +2,74 @@ version: "3.8"
 
 services:
   ytdl-material:
-    image: tzahi12345/youtubedl-material:latest
-    container_name: ytdl-material
-    ports:
-      - "8998:17442"
-    volumes:
-      - ${DOCKER_PATH_PERSISTENT}/yt-dlp/downloads:/app/video
-      - ${DOCKER_PATH_PERSISTENT}/yt-dlp/audio:/app/audio
-      - ${DOCKER_PATH_PERSISTENT}/yt-dlp/subscriptions:/app/subscriptions
-      - ${DOCKER_PATH_PERSISTENT}/yt-dlp/users:/app/users
-      - ${DOCKER_PATH_PERSISTENT}/yt-dlp/config:/app/appdata
-    environment:
-      - ytdl_mongodb_connection_string=mongodb://mongo:27017
-      - ALLOW_CONFIG_MUTATIONS=true
-      - TZ=Europe/Madrid
-    depends_on:
-      - mongo
-    networks:
-      - infra_net
-    restart: unless-stopped
+    image: tzahi12345/youtubedl-material:latest@sha256:2f943d584711cb07c3535b518939fabb2ab90fdd7452d9a9938cd05378468ed9
 
-  mongo:
-    image: mongo:4.4
-    container_name: ytdl-mongo
+    environment:
+      ALLOW_CONFIG_MUTATIONS: "true"
+      TZ: Europe/Madrid
+
     volumes:
-      - ${DOCKER_PATH_PERSISTENT}/mongo-data:/data/db
+      - type: bind
+        source: /mnt/linstor/yt-dlp-data/appdata
+        target: /app/appdata
+
+      - type: bind
+        source: /mnt/nas-docker-domotica/yt-dlp/video
+        target: /app/video
+
+      - type: bind
+        source: /mnt/nas-docker-domotica/yt-dlp/audio
+        target: /app/audio
+
+      - type: bind
+        source: /mnt/nas-docker-domotica/yt-dlp/subscriptions
+        target: /app/subscriptions
+
+      - type: bind
+        source: /mnt/nas-docker-domotica/yt-dlp/users
+        target: /app/users
+
+    ports:
+      - target: 17442
+        published: 8998
+        protocol: tcp
+        mode: ingress
+
     networks:
       - infra_net
-    restart: unless-stopped
+
+    stop_grace_period: 10s
+
+    deploy:
+      mode: replicated
+      replicas: 1
+
+      endpoint_mode: vip
+
+      placement:
+        constraints:
+          - node.hostname == debian12
+
+      restart_policy:
+        condition: any
+        delay: 5s
+
+      update_config:
+        parallelism: 1
+        delay: 0s
+        order: stop-first
+        failure_action: pause
+        monitor: 5s
+        max_failure_ratio: 0
+
+      rollback_config:
+        parallelism: 1
+        delay: 0s
+        order: stop-first
+        failure_action: pause
+        monitor: 5s
+        max_failure_ratio: 0
 
 networks:
   infra_net:
     external: true
-
-
