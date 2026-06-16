@@ -1,0 +1,120 @@
+version: "3.8"
+
+services:
+  mularr:
+    image: ghcr.io/joecarl/mularr:${MULARR_IMAGE_TAG:-v0.15.1}
+
+    user: "${DOCKER_ROOTPUID:-1000}:${DOCKER_ROOTPGID:-1000}"
+
+    environment:
+      - TZ=${DOCKER_TZ}
+
+      # Web y base de datos
+      - PORT=${MULARR_PORT:-8940}
+      - DATABASE_PATH=/app/data/database.sqlite
+
+      # aMule incluido dentro de Mularr
+      - AMULE_HOST=127.0.0.1
+      - AMULE_PORT=4712
+      - AMULE_PASSWORD=secret
+
+      # Descargas completadas en la ruta común
+      - AMULE_INCOMING_DIR=/downloads
+
+      # Temporales separados y locales
+      - AMULE_TEMP_DIR=/app/data/amule/Temp
+
+      # Reinicio preventivo de amuled
+      - AMULE_RESTART_INTERVAL_HOURS=${MULARR_AMULE_RESTART_HOURS:-12}
+
+      # Sin VPN durante la prueba
+      - GLUETUN_ENABLED=false
+
+      # Seguridad
+      - AUTH_USERNAME=${MULARR_AUTH_USERNAME}
+      - AUTH_PASSWORD=${MULARR_AUTH_PASSWORD}
+      - API_KEY=${MULARR_API_KEY}
+      - JWT_SECRET=${MULARR_JWT_SECRET}
+
+    volumes:
+      - ${DOCKER_PATH_PERSISTENT}/mularr:/app/data
+      - ${DOCKER_PATH_MEDIA}/Descargas/Series:/downloads
+
+    networks:
+      - infra_net
+
+    ports:
+      - target: ${MULARR_PORT:-8940}
+        published: ${MULARR_PORT:-8940}
+        protocol: tcp
+        mode: host
+
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - >-
+          fetch('http://127.0.0.1:' + (process.env.PORT || '8940') + '/')
+          .then(response => process.exit(response.ok ? 0 : 1))
+          .catch(() => process.exit(1))
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+      start_interval: 3s
+
+    deploy:
+      mode: replicated
+      replicas: 1
+
+      placement:
+        constraints:
+          - node.hostname == ${NODE_HOSTNAME}
+
+      restart_policy:
+        condition: any
+        delay: 10s
+        window: 120s
+
+      update_config:
+        parallelism: 1
+        delay: 10s
+        order: stop-first
+        failure_action: rollback
+        monitor: 30s
+
+      rollback_config:
+        parallelism: 1
+        delay: 10s
+        order: stop-first
+
+      resources:
+        reservations:
+          cpus: "${MULARR_RES_CPU:-0.25}"
+          memory: ${MULARR_RES_MEM:-512M}
+        limits:
+          cpus: "${MULARR_LIM_CPU:-1.50}"
+          memory: ${MULARR_LIM_MEM:-1536M}
+
+      labels:
+        - "com.centurylinklabs.watchtower.scope=swarm"
+
+        - "traefik.enable=true"
+        - "traefik.swarm.network=infra_net"
+
+        - "traefik.http.routers.${STACK_KEY}-http.rule=Host(`${MULARR_HOST}`)"
+        - "traefik.http.routers.${STACK_KEY}-http.entrypoints=http"
+        - "traefik.http.routers.${STACK_KEY}-http.middlewares=redirect-to-https@file"
+        - "traefik.http.routers.${STACK_KEY}-http.service=noop@internal"
+
+        - "traefik.http.routers.${STACK_KEY}-https.rule=Host(`${MULARR_HOST}`)"
+        - "traefik.http.routers.${STACK_KEY}-https.entrypoints=https"
+        - "traefik.http.routers.${STACK_KEY}-https.tls.certresolver=step"
+        - "traefik.http.routers.${STACK_KEY}-https.service=${STACK_KEY}-svc"
+
+        - "traefik.http.services.${STACK_KEY}-svc.loadbalancer.server.port=${MULARR_PORT:-8940}"
+
+networks:
+  infra_net:
+    external: true
