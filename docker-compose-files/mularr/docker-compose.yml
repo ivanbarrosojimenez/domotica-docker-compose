@@ -1,3 +1,4 @@
+```yaml
 version: "3.8"
 
 services:
@@ -13,16 +14,19 @@ services:
       - PORT=${MULARR_PORT:-8940}
       - DATABASE_PATH=/app/data/database.sqlite
 
-      # aMule incluido dentro de Mularr
+      # aMule incluido dentro de MulaRR
       - AMULE_HOST=127.0.0.1
       - AMULE_PORT=4712
       - AMULE_PASSWORD=secret
 
-      # Descargas completadas en la ruta común
+      # Configuración persistente de aMule en el volumen DRBD
+      - AMULE_CONFIG_DIR=/app/data/amule
+
+      # Descargas completadas en la ruta común del NAS
       - AMULE_INCOMING_DIR=/downloads
 
-      # Temporales separados y locales
-      - AMULE_TEMP_DIR=/app/data/amule/Temp
+      # Descargas parciales de MulaRR en una carpeta propia del NAS
+      - AMULE_TEMP_DIR=/downloads/incomplete-mularr
 
       # Reinicio preventivo de amuled
       - AMULE_RESTART_INTERVAL_HOURS=${MULARR_AMULE_RESTART_HOURS:-12}
@@ -37,7 +41,10 @@ services:
       - JWT_SECRET=${MULARR_JWT_SECRET}
 
     volumes:
-      - ${DOCKER_PATH_PERSISTENT}/mularr:/app/data
+      # Base de datos, configuración y estado persistente en DRBD
+      - /mnt/linstor/mularr-data:/app/data
+
+      # Descargas completadas y temporales en el NAS
       - ${DOCKER_PATH_MEDIA}/Descargas/Series:/downloads
 
     networks:
@@ -117,3 +124,4 @@ services:
 networks:
   infra_net:
     external: true
+```
