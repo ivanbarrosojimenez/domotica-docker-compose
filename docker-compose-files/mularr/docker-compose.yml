@@ -1,4 +1,4 @@
-```yaml
+
 version: "3.8"
 
 services:
@@ -124,4 +124,3 @@ services:
 networks:
   infra_net:
     external: true
-```
