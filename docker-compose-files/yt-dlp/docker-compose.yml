@@ -50,6 +50,14 @@ services:
         constraints:
           - node.hostname == debian12
 
+      resources:
+        reservations:
+          memory: 256M
+          cpus: "0.25"
+        limits:
+          memory: 1G
+          cpus: "1.0"
+
       restart_policy:
         condition: any
         delay: 5s
