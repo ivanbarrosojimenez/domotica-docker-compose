@@ -48,7 +48,7 @@ services:
 
       placement:
         constraints:
-          - node.hostname == debian12
+          - node.labels.nas.mounts == true
 
       resources:
         reservations:
