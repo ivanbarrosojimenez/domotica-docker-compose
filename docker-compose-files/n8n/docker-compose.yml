@@ -54,7 +54,7 @@ services:
           memory: ${N8N_POSTGRES_LIM_MEM:-1G}
 
   n8n:
-    image: docker.n8n.io/n8nio/n8n:1.123.28
+    image: docker.n8n.io/n8nio/n8n:latest
     hostname: n8n
     user: "${DOCKER_ROOTPUID}:${DOCKER_ROOTPGID}"
 
@@ -86,6 +86,7 @@ services:
 
       N8N_ENCRYPTION_KEY: ${N8N_ENCRYPTION_KEY}
       N8N_DIAGNOSTICS_ENABLED: "false"
+      N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS: "true"
 
       N8N_RUNNERS_ENABLED: "true"
       N8N_BLOCK_ENV_ACCESS_IN_NODE: "true"
