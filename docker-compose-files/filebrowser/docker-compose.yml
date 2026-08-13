@@ -16,12 +16,21 @@ services:
       - ${DOCKER_PATH_TEMPORARY}:/data/docker-logs
       - ${DOCKER_PATH_PERSISTENT}/${FILEBROWSER_APP_DIR}/config:/config:rw
       - ${DOCKER_PATH_PERSISTENT}/${FILEBROWSER_APP_DIR}/database:/database:rw
+    
       - type: bind
         source: ${DOCKER_PATH_LINSTOR:-/mnt/linstor}
         target: /mnt/linstor
         read_only: false
         bind:
           propagation: rslave
+    
+      - type: bind
+        source: ${DOCKER_PATH_LINSTOR:-/mnt/linstor}
+        target: /data/linstor
+        read_only: false
+        bind:
+          propagation: rslave
+
 
     environment:
       - TZ=${DOCKER_TZ}
