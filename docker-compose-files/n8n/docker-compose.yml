@@ -27,7 +27,7 @@ services:
 
     deploy:
       mode: replicated
-      replicas: 1
+      replicas: ${N8N_REPLICAS:-1}
       placement:
         constraints:
           - node.hostname == ${NODE_HOSTNAME}
