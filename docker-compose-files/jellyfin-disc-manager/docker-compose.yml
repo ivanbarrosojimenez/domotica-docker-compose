@@ -1,0 +1,49 @@
+version: "3.8"
+
+services:
+  jellyfin-disc-manager:
+    image: python:3.12-slim-bookworm
+    working_dir: /app
+    command: ["python", "-u", "/app/disc_manager.py"]
+    user: "1000:1000"
+    environment:
+      TZ: ${DOCKER_TZ:-Europe/Madrid}
+      PYTHONDONTWRITEBYTECODE: "1"
+      JELLYFIN_URL: ${JELLYFIN_URL:-http://192.168.1.151:8096/jellyfin}
+      JELLYFIN_USER_ID: ${JELLYFIN_USER_ID:?Define_JELLYFIN_USER_ID}
+      JELLYFIN_API_KEY: ${JELLYFIN_API_KEY:?Define_JELLYFIN_API_KEY}
+      DAILY_AT: ${DISC_MANAGER_DAILY_AT:-04:00}
+      DRY_RUN: "true"
+      RUN_MEDIA_CLEANER: "false"
+      RESTORE_WATCHED: "false"
+      ALLOW_MISSING_PARENT: "false"
+      MAX_MISSING: "10"
+      MIN_EXISTING_FILES: "5"
+    volumes:
+      - ${DOCKER_PATH_PERSISTENT}/jellyfin-disc-manager/disc_manager.py:/app/disc_manager.py:ro
+      - ${DOCKER_PATH_PERSISTENT}/jellyfin-disc-manager:/data
+      - ${DOCKER_PATH_MEDIA}/Peliculas:/movies:ro
+      - ${DOCKER_PATH_MEDIA}/Series:/tv:ro
+      - /usr/share/zoneinfo:/usr/share/zoneinfo:ro
+    networks:
+      - infra_net
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.hostname == ${NODE_HOSTNAME:-docker-worker-2}
+      restart_policy:
+        condition: any
+        delay: 10s
+      resources:
+        reservations:
+          cpus: "0.05"
+          memory: 64M
+        limits:
+          cpus: "0.50"
+          memory: 256M
+
+networks:
+  infra_net:
+    external: true
